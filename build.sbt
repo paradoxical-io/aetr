@@ -76,3 +76,5 @@ lazy val core = project.settings(commonSettings).settings(
   )
 ).dependsOn(jackson, global).
   enablePlugins(DockerPlugin)
+
+pgpPassphrase := Some(sys.env.getOrElse("GPG_PASSWORD", default = "").toArray)

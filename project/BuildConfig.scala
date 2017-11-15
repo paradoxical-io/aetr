@@ -35,6 +35,13 @@ object BuildConfig {
 
       resolvers += Resolver.sonatypeRepo("releases"),
 
+      publishTo := Some(
+        if (isSnapshot.value)
+          Opts.resolver.sonatypeSnapshots
+        else
+          Opts.resolver.sonatypeStaging
+      ),
+
       organization := "io.paradoxical",
 
       version := s"${currentVersion}-${BuildConfig.Revision.revision}",
