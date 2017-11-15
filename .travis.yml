@@ -7,3 +7,7 @@ jdk:
   - oraclejdk8
 
 script: travis_retry sbt ++$TRAVIS_SCALA_VERSION clean test
+
+cache:
+  directories:
+   - $HOME/.bundle.dep.cache
