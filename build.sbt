@@ -1,6 +1,6 @@
 import BuildConfig._
 
-lazy val commonSettings = BuildConfig.commonSettings(currentVersion = "1.0")
+lazy val commonSettings = BuildConfig.commonSettings(currentVersion = "1.1")
 
 /**
  * The project root
