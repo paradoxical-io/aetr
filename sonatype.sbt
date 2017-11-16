@@ -10,8 +10,8 @@ publishArtifact in Test := false
 
 sonatypeProfileName := "io.paradoxical"
 
-pgpPublicRing := new File(".deployment//gpg/paradoxical-io.pubgpg")
-pgpSecretRing := new File(".deployment//gpg/paradoxical-io-private.gpg")
+pgpPublicRing := new File(".deployment/gpg/paradoxical-io.pubgpg")
+pgpSecretRing := new File(".deployment/gpg/paradoxical-io-private.gpg")
 
 pomIncludeRepository := { _ => false }
 
