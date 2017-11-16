@@ -1,6 +1,6 @@
 credentials += Credentials("Sonatype Nexus Repository Manager",
   "oss.sonatype.org",
-  sys.env.getOrElse("SONATYPE_USER", default = ""),
+  sys.env.getOrElse("SONATYPE_USER", default = "paradoxicalio"),
   sys.env.getOrElse("SONATYPE_PASSWORD", default = ""))
 
 // Your profile name of the sonatype account. The default is the same with the organization value
@@ -11,13 +11,13 @@ publishArtifact in Test := false
 sonatypeProfileName := "io.paradoxical"
 
 pgpPublicRing := new File(".deployment//gpg/paradoxical-io.pubgpg")
-pgpSecretRing := new File(".deployment//gpg/paradoxical-ioprivate.gpg")
+pgpSecretRing := new File(".deployment//gpg/paradoxical-io-private.gpg")
 
 pomIncludeRepository := { _ => false }
 
 // To sync with Maven central, you need to supply the following information:
 pomExtra := (
-  <url>https://github.com/devshorts/scala-tiny-types</url>
+  <url>https://github.com/paradoxical-io/aetr</url>
     <licenses>
       <license>
         <name>Apache 2</name>
