@@ -1,7 +1,7 @@
 function snapshot() {
-  sbt publish
+  sbt publishSigned
 }
 
 function release() {
-  sbt -Drevision=$REVISION publish
+  sbt -Drevision=$REVISION publishSigned sonatypeRelease
 }
