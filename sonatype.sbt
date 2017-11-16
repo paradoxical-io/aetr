@@ -10,6 +10,9 @@ publishArtifact in Test := false
 
 sonatypeProfileName := "io.paradoxical"
 
+pgpPublicRing := new File(".deployment//gpg/paradoxical-io.pubgpg")
+pgpSecretRing := new File(".deployment//gpg/paradoxical-ioprivate.gpg")
+
 pomIncludeRepository := { _ => false }
 
 // To sync with Maven central, you need to supply the following information:
