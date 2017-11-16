@@ -7,8 +7,8 @@ script: travis_retry sbt ++$TRAVIS_SCALA_VERSION clean test
 cache:
   directories:
    - $HOME/.bundle.dep.cache
- after_success:
- - ./.deployment/deploy.sh
+after_success:
+  - ./.deployment/deploy.sh
 env:
   global:
   - secure: ETQnT1ut9U2HhhoTaB80T0efy/bCuuj70aemRPTBcba2NNR58Ip4oRP3+2SpsUG4KvJQxxFjSmTfnEJDKZIxczygp7Rx+K8gsbDfN2IDHOsxUOmF1H9Mr/wGaVI9rBB/7X5APJNvV5WwtjzmTCiSR9xNKr23KL+AgBe4QxzHM0+Hf6h2Ees1PTDoHoDtAUuUAIqDBtqR9lTNAXO+iKp4D+aCtiZtjMdLIuZm6cUQWYXK5+9RSB5MYYHNZ+nMHZzdi9biBtHgtk4bGgu4Piyq4AUPlOmhrd5cuiWvss1xcd7ujltJOM3CrmL4RuFElBdBJwpCmfQ9aVd/V50CzvYCyZEMosNHwsvtBs/Ih6W9kmNj4LRb9H37HP+pEj7V0NTMdEHoGvJgrbaBMY8q762kXrhP/atiavPZhIO0kZbQIVtDXT2fD8q8jsZzfuQ4r+CLbRbs3VhcLt0++dr/ziN4BKLveFzlPO9lkwRBytrXvLbnqdEt5to5UqC6CRC3ALAswF4Rp2JNYjoOad8r5xCSpKgRw0c7xtE0btqUHEja8ffNlPWIYegnBMdvE4pAe3C5Fy3w6UwsyUYwjV/ax6l1pRCkRDFLT3lqVcQXu7FWcuxWpA005ljb6xP9KAyi2j/gPKXy7GNu6KQr7tVBIIKwoPTpgpmPOdT2X+rkearnwEY=
