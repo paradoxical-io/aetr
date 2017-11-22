@@ -4,7 +4,7 @@ package io.paradoxical.aetr.core.server.serialization
 import com.fasterxml.jackson.databind.{Module, PropertyNamingStrategy, SerializationFeature}
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.twitter.finatra.json.modules.FinatraJacksonModule
-import io.paradoxical.aetr.jackson.serializers.TypeSerializerModule
+import io.paradoxical.jackson.serializers.TypeSerializerModule
 
 class JsonModule extends FinatraJacksonModule {
   // add in our tiny type serializer

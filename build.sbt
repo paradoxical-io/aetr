@@ -1,6 +1,6 @@
 import BuildConfig._
 
-lazy val commonSettings = BuildConfig.commonSettings(currentVersion = "1.1")
+lazy val commonSettings = BuildConfig.commonSettings()
 
 /**
  * The project root
@@ -11,33 +11,7 @@ lazy val `aetr` = project.
   settings(
     publish := {},
     aggregate in update := false
-  ).aggregate(core, global, jackson, model)
-
-lazy val global = project.settings(commonSettings).settings(
-  Seq(
-    name := "aetr-global",
-
-    libraryDependencies ++= Seq() ++ Dependencies.testDeps
-  )
-)
-
-lazy val jackson = project.settings(commonSettings).settings(
-  Seq(
-    name := "aetr-jackson",
-
-    libraryDependencies ++= Seq(
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.1"
-    ) ++ Dependencies.testDeps
-  )
-).dependsOn(global)
-
-lazy val model = project.settings(commonSettings).settings(
-  Seq(
-    name := "aetr-model",
-
-    libraryDependencies ++= Seq() ++ Dependencies.testDeps
-  )
-).dependsOn(global)
+  ).aggregate(core)
 
 lazy val core = project.settings(commonSettings).settings(
   Seq(
@@ -56,25 +30,12 @@ lazy val core = project.settings(commonSettings).settings(
     },
 
     libraryDependencies ++= Seq(
-      "com.twitter" %% "finatra-http" % versions.finatra,
       "ch.qos.logback" % "logback-classic" % versions.logback,
+      "io.paradoxical" %% "paradox-scala-jackson" % versions.paradox.global,
+      "io.paradoxical" %% "finatra-server" % versions.paradox.finatra,
       "ch.qos.logback" % "logback-classic" % versions.logback % "test",
-
-      "com.twitter" %% "finatra-http" % versions.finatra % "test",
-      "com.twitter" %% "inject-server" % versions.finatra % "test",
-      "com.twitter" %% "inject-app" % versions.finatra % "test",
-      "com.twitter" %% "inject-core" % versions.finatra % "test",
-      "com.twitter" %% "inject-modules" % versions.finatra % "test",
-      "com.google.inject.extensions" % "guice-testlib" % versions.guice % "test",
-
-      "com.twitter" %% "finatra-http" % versions.finatra % "test" classifier "tests",
-      "com.twitter" %% "inject-server" % versions.finatra % "test" classifier "tests",
-      "com.twitter" %% "inject-app" % versions.finatra % "test" classifier "tests",
-      "com.twitter" %% "inject-core" % versions.finatra % "test" classifier "tests",
-      "com.twitter" %% "inject-modules" % versions.finatra % "test" classifier "tests",
+      "io.paradoxical" %% "finatra-test" % versions.paradox.finatra % "test"
     ) ++ Dependencies.testDeps
   )
-).dependsOn(jackson, global).
+).dependsOn().
   enablePlugins(DockerPlugin)
-
-pgpPassphrase := Some(sys.env.getOrElse("GPG_PASSWORD", default = "").toArray)

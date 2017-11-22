@@ -7,12 +7,16 @@ import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceI
 import com.twitter.finatra.http.routing.HttpRouter
 import io.paradoxical.aetr.core.server.controllers.PingController
 import io.paradoxical.aetr.core.server.serialization.JsonModule
+import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
 
-
-
-class ExampleServer extends HttpServer {
-
+class AetrServer extends HttpServer with SwaggerDocs {
   override def defaultFinatraHttpPort = ":9999"
+
+  override def documentation = new ApiDocumentationConfig {
+    override val description: String = "Aetr"
+    override val title: String = "API"
+    override val version: String = "1.0"
+  }
 
   override protected def jacksonModule: Module = new JsonModule()
 
@@ -22,5 +26,7 @@ class ExampleServer extends HttpServer {
       .filter[TraceIdMDCFilter[Request, Response]]
       .filter[CommonFilters]
       .add[PingController]
+
+    configureDocumentation(router)
   }
 }

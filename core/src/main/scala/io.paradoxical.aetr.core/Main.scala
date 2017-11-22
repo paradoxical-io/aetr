@@ -1,5 +1,5 @@
 package io.paradoxical.aetr.core
 
-import io.paradoxical.aetr.core.server.ExampleServer
+import io.paradoxical.aetr.core.server.AetrServer
 
-object Main extends ExampleServer
+object Main extends AetrServer

@@ -4,10 +4,12 @@ import sbtassembly.AssemblyKeys._
 
 object BuildConfig {
   lazy val versions = new {
-    val finatra = "2.13.0"
-    val guice = "4.0"
-    val logback = "1.1.7"
+    lazy val paradox = new {
+      val finatra = "1.0.2"
+      val global = "1.1"
+    }
     val mockito = "1.9.5"
+    val logback = "1.1.7"
     val scalatest = "3.0.0"
     val scalacheck = "1.13.4"
   }
@@ -20,10 +22,10 @@ object BuildConfig {
     )
   }
   object Revision {
-    lazy val revision = System.getProperty("revision", "SNAPSHOT")
+    lazy val version = System.getProperty("version", "1.0-SNAPSHOT")
   }
 
-  def commonSettings(currentVersion: String) = {
+  def commonSettings() = {
     Seq(
       fork in run := true,
 
@@ -33,18 +35,11 @@ object BuildConfig {
         "-Dlog.service.output=/dev/stderr",
         "-Dlog.access.output=/dev/stderr"),
 
-      resolvers += Resolver.sonatypeRepo("releases"),
-
-      publishTo := Some(
-        if (isSnapshot.value)
-          Opts.resolver.sonatypeSnapshots
-        else
-          Opts.resolver.sonatypeStaging
-      ),
+      resolvers += Resolver.sonatypeRepo("public"),
 
       organization := "io.paradoxical",
 
-      version := s"${currentVersion}-${BuildConfig.Revision.revision}",
+      version := BuildConfig.Revision.version,
 
       scalaVersion := "2.12.4",
 
@@ -65,9 +60,8 @@ object BuildConfig {
         "-Xfuture"
       ),
 
-      scalacOptions in doc ++= scalacOptions.value.filterNot(_ == "-Xfatal-warnings"),
-
-      sources in doc in Compile := List()
-    )
+      scalacOptions in(Compile, doc) := scalacOptions.value.filterNot(_ == "-Xfatal-warnings"),
+      scalacOptions in(Compile, doc) += "-no-java-comments"
+    ) ++ Publishing.publishSettings
   }
 }
