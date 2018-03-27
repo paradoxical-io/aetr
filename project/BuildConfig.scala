@@ -5,7 +5,7 @@ import sbtassembly.AssemblyKeys._
 object BuildConfig {
   lazy val versions = new {
     lazy val paradox = new {
-      val finatra = "1.0.2"
+      val finatra = "1.0.4"
       val global = "1.1"
     }
     val guice = "4.0"
