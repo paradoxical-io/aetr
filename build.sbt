@@ -33,6 +33,9 @@ lazy val core = project.settings(commonSettings).settings(
       "ch.qos.logback" % "logback-classic" % versions.logback,
       "io.paradoxical" %% "paradox-scala-jackson" % versions.paradox.global,
       "io.paradoxical" %% "finatra-server" % versions.paradox.finatra,
+      "io.paradoxical" %% "finatra-swagger" % versions.paradox.finatra,
+      "io.paradoxical" %% "tasks" % versions.paradox.tasks,
+      "net.codingwell" %% "scala-guice" % versions.scalaGuice,
       "ch.qos.logback" % "logback-classic" % versions.logback % "test",
       "com.google.inject.extensions" % "guice-testlib" % versions.guice % "test",
       "io.paradoxical" %% "finatra-test" % versions.paradox.finatra % "test"

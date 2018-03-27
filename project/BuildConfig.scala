@@ -7,12 +7,14 @@ object BuildConfig {
     lazy val paradox = new {
       val finatra = "1.0.4"
       val global = "1.1"
+      val tasks = "1.5"
     }
     val guice = "4.0"
     val mockito = "1.9.5"
     val logback = "1.1.7"
     val scalatest = "3.0.0"
     val scalacheck = "1.13.4"
+    val scalaGuice = "4.1.1"
   }
 
   object Dependencies {

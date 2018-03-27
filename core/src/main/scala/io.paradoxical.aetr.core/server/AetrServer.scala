@@ -9,7 +9,7 @@ import io.paradoxical.aetr.core.server.controllers.PingController
 import io.paradoxical.aetr.core.server.serialization.JsonModule
 import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
 
-class AetrServer extends HttpServer with SwaggerDocs {
+class AetrServer(modules: Seq[Module]) extends HttpServer with SwaggerDocs {
   override def defaultFinatraHttpPort = ":9999"
 
   override def documentation = new ApiDocumentationConfig {
