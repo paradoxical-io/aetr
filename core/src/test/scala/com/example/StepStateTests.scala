@@ -1,7 +1,7 @@
 package com.example
 
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.aetr.core.steps.graph.RunManager
+import io.paradoxical.aetr.core.steps.graph.{RunManager, TreeManager}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import scala.util.Random
@@ -59,5 +59,17 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     val toFind = Random.shuffle(allNodes).head
 
     manager.find(toFind.id).get shouldEqual toFind
+  }
+
+  it should "flatten step trees" in new ActionList {
+    new TreeManager(root).flatten shouldEqual List(
+      root, sequentialParent, action1, action2, parallelParent, action3, action4
+    )
+  }
+
+  it should "flatten run lists" in new ActionList {
+    new RunManager(root).flatten.map(_.repr) shouldEqual List(
+      root, sequentialParent, action1, action2, parallelParent, action3, action4
+    )
   }
 }

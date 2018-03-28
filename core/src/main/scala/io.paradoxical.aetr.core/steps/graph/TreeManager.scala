@@ -4,10 +4,25 @@ import io.paradoxical.aetr.core.model
 import io.paradoxical.aetr.core.model._
 import java.util.UUID
 
-class TreeToRun(root: StepTree) {
-  lazy val run: Run = newRun()
-
+class TreeManager(root: StepTree) {
   private lazy val rootId = RunId(UUID.randomUUID())
+
+  def flatten: List[StepTree] = {
+    def all0(curr: StepTree, acc: List[StepTree]): List[StepTree] = {
+      curr match {
+        case x: Parent =>
+          if (x.children.isEmpty) {
+            curr :: acc
+          } else {
+            curr :: x.children.flatMap(c => all0(c, acc))
+          }
+        case x: Action =>
+          List(x)
+      }
+    }
+
+    all0(root, Nil)
+  }
 
   private def getChildren(node: StepTree): Seq[Run] = {
     node match {
@@ -18,7 +33,7 @@ class TreeToRun(root: StepTree) {
     }
   }
 
-  private def newRun(): Run = {
+  def newRun(): Run = {
     val r = model.Run(
       rootId,
       getChildren(root),

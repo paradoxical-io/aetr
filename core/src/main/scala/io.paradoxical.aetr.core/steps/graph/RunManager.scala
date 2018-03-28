@@ -4,7 +4,7 @@ import io.paradoxical.aetr.core.model._
 
 class RunManager(val run: Run) {
   def this(stepTree: StepTree) {
-    this(new TreeToRun(stepTree).run)
+    this(new TreeManager(stepTree).newRun())
   }
 
   def flatten: List[Run] = {
