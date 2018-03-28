@@ -1,5 +1,6 @@
 package com.example
 
+import io.paradoxical.aetr.core.steps.StepState
 import io.paradoxical.aetr.core.steps.execution._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
@@ -22,6 +23,12 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     def advance(action: Action*) = {
       val nextActions = m.next()
+
+      if(nextActions.isEmpty) {
+        assert(m.run.state == StepState.Complete)
+      } else {
+        assert(m.run.state == StepState.Pending)
+      }
 
       assert(nextActions.map(_.action) == action.toList)
 

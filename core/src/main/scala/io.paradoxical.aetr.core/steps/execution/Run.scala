@@ -9,6 +9,7 @@ case class Run(
   children: Seq[Run],
   root: UUID,
   repr: StepTree,
+  var parent: Option[Run] = None,
   var state: StepState = StepState.Pending,
   var result: Option[String] = None
 )
@@ -29,12 +30,23 @@ class RunManager(root: StepTree) {
   }
 
   private def newRun(): Run = {
-    Run(
+    val r = Run(
       rootId,
       getChildren(root),
       rootId,
       root
     )
+
+    setParents(r)
+
+    r
+  }
+
+  private def setParents(parent: Run): Unit = {
+    parent.children.foreach(r => {
+      r.parent = Some(parent)
+      setParents(r)
+    })
   }
 
   private def newRun0(tree: StepTree): Run = {
@@ -63,13 +75,13 @@ class RunManager(root: StepTree) {
   def complete(run: Run): Unit = {
     run.state = StepState.Complete
 
-    syncState(runRoot)
+    run.parent.foreach(syncState)
   }
 
   private def syncState(run: Run): Unit = {
     run.state = determineState(run)
 
-    run.children.foreach(syncState)
+    run.parent.foreach(syncState)
   }
 
   private def determineState(run: Run): StepState = {
