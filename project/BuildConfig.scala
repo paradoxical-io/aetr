@@ -59,7 +59,7 @@ object BuildConfig {
         "-Ywarn-nullary-unit",
         "-Xfatal-warnings",
         "-Xlint",
-        "-Ywarn-dead-code",
+       // "-Ywarn-dead-code",
         "-Xfuture"
       ),
 

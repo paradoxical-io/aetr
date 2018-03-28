@@ -1,57 +1,42 @@
 package com.example
 
-import com.example.mocks.FakeStepLoader
 import io.paradoxical.aetr.core.steps.StepState
-import io.paradoxical.aetr.core.steps.execution.{StepExecutor, UrlExecutor}
-import io.paradoxical.aetr.core.task._
-import java.net.URL
+import io.paradoxical.aetr.core.steps.execution._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
-  def newStep(name: String): Step = {
-    ApiStep(
-      id = StepId.next,
-      name = StepName(name),
-      next = None,
-      url = new URL("http://fake")
-    )
-  }
 
-  trait TestSetup {
-    val mockUrl = mock[UrlExecutor]
+  "Step state" should "sub children" in {
+    val action = Action("action1", NoOp)
+    val action2 = Action("action2", NoOp)
+    val action3 = Action("action3", NoOp)
+    val action4 = Action("action4", NoOp)
 
-    val db = new FakeStepLoader
+    val parallelParent = ParallelParent(List(action3, action4))
 
-    val executor = new StepExecutor(db, mockUrl)
-  }
+    val sequentialParent = SequentialParent(List(action, action2))
 
-  "Step state" should "process" in new TestSetup {
-    val step1 = newStep("one")
+    val root = SequentialParent(List(sequentialParent, parallelParent))
 
-    val step2 = newStep("two")
+    root.state shouldEqual StepState.Pending
 
-    val root = newStep("root").withNext(SequentialSubSteps(List(step1, step2)))
+    root.getNext(None).map(_.action) shouldEqual List(action)
 
-    val pendingRoot = executor.execute(root, None)
-    assert(pendingRoot.source == root.id)
+    action.complete()
 
-    val pendingStep1 = executor.advance(pendingRoot.id, None)
+    root.getNext(None).map(_.action) shouldEqual List(action2)
 
-    assert(pendingStep1.size == 1)
-    assert(pendingStep1.head.source == step1.id)
+    action2.complete()
 
-    val pendingStep2 = executor.advance(pendingStep1.head.id, None)
+    root.getNext(None).map(_.action) shouldEqual List(action3, action4)
 
-    assert(pendingStep2.size == 1)
-    assert(pendingStep2.head.source == step2.id)
+    action3.complete()
 
-    val step2Result = executor.advance(pendingStep2.head.id, None)
+    root.getNext(None).map(_.action) shouldEqual List(action4)
 
-    assert(step2Result.isEmpty)
+    action4.complete()
 
-    assert(db.getStepInstance(pendingStep2.head.id).get.state == StepState.Complete)
-    assert(db.getStepInstance(pendingStep1.head.id).get.state == StepState.Complete)
-    assert(db.getStepInstance(pendingRoot.id).get.state == StepState.Complete)
+    root.state shouldEqual StepState.Complete
   }
 }
