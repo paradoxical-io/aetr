@@ -1,75 +1,34 @@
-package io.paradoxical.aetr.core.steps.execution
+package io.paradoxical.aetr.core.steps.graph
 
-import io.paradoxical.aetr.core.steps.StepState
-import java.util.UUID
+import io.paradoxical.aetr.core.model._
 
+class RunManager(val run: Run) {
+  def this(stepTree: StepTree) {
+    this(new TreeToRun(stepTree).run)
+  }
 
-case class Run(
-  id: UUID,
-  children: Seq[Run],
-  root: UUID,
-  repr: StepTree,
-  var parent: Option[Run] = None,
-  var state: StepState = StepState.Pending,
-  var result: Option[String] = None
-)
-
-class RunManager(root: StepTree) {
-  private lazy val runRoot: Run = newRun()
-  private lazy val rootId = UUID.randomUUID()
-
-  def run: Run = runRoot
-
-  private def getChildren(node: StepTree): Seq[Run] = {
-    node match {
-      case p: Parent =>
-        p.children.map(newRun0)
-      case _: Action =>
-        Nil
+  def flatten: List[Run] = {
+    def all0(curr: Run, acc: List[Run]): List[Run] = {
+      if (curr.children.isEmpty) {
+        curr :: acc
+      } else {
+        curr :: curr.children.flatMap(c => all0(c, acc)).toList
+      }
     }
+
+    all0(run, Nil)
   }
 
-  private def newRun(): Run = {
-    val r = Run(
-      rootId,
-      getChildren(root),
-      rootId,
-      root
-    )
-
-    setParents(r)
-
-    r
-  }
-
-  private def setParents(parent: Run): Unit = {
-    parent.children.foreach(r => {
-      r.parent = Some(parent)
-      setParents(r)
-    })
-  }
-
-  private def newRun0(tree: StepTree): Run = {
-    Run(
-      UUID.randomUUID(),
-      getChildren(tree),
-      rootId,
-      tree
-    )
-  }
-
-  def find(id: UUID): Option[Run] = {
+  def find(id: RunId): Option[Run] = {
     def find0(curr: Run): Option[Run] = {
       if (curr.id == id) {
         Some(curr)
       } else {
-        curr.children.collectFirst {
-          case c if find0(c).isDefined => c
-        }
+        curr.children.view.map(find0).find(_.isDefined).flatten
       }
     }
 
-    find0(runRoot)
+    find0(run)
   }
 
   def complete(run: Run): Unit = {
@@ -84,6 +43,14 @@ class RunManager(root: StepTree) {
     run.parent.foreach(syncState)
   }
 
+  def setState(run: RunId, state: StepState): Unit = {
+    find(run).foreach(r => {
+      r.state = state
+
+      syncState(r)
+    })
+  }
+
   private def determineState(run: Run): StepState = {
     if (run.children.isEmpty) {
       run.state
@@ -92,8 +59,8 @@ class RunManager(root: StepTree) {
         StepState.Complete
       } else if (run.children.exists(_.state == StepState.Error)) {
         StepState.Error
-      } else if (run.children.exists(_.state == StepState.Running)) {
-        StepState.Running
+      } else if (run.children.exists(_.state == StepState.Executing)) {
+        StepState.Executing
       } else {
         StepState.Pending
       }
@@ -113,14 +80,14 @@ class RunManager(root: StepTree) {
   }
 
   def next(seed: Option[String] = None): Seq[Actionable] = {
-    next(runRoot, seed)
+    next(run, seed)
   }
 
   private def next(run: Run, data: Option[String]): Seq[Actionable] = {
     run.repr match {
       case x: Parent =>
         x match {
-          case SequentialParent(_) =>
+          case _: SequentialParent =>
             val payload =
               if (run.children.forall(_.state == StepState.Pending)) {
                 data
@@ -129,7 +96,7 @@ class RunManager(root: StepTree) {
               }
 
             run.children.find(_.state == StepState.Pending).map(next(_, payload)).getOrElse(Nil)
-          case ParallelParent(_) =>
+          case _: ParallelParent =>
             run.children.filter(_.state == StepState.Pending).flatMap(next(_, data))
         }
       case x: Action if run.state == StepState.Pending =>
@@ -137,5 +104,3 @@ class RunManager(root: StepTree) {
     }
   }
 }
-
-case class Actionable(run: Run, action: Action, result: Option[String])

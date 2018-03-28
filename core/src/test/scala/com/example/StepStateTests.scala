@@ -1,43 +1,63 @@
 package com.example
 
-import io.paradoxical.aetr.core.steps.StepState
-import io.paradoxical.aetr.core.steps.execution._
+import io.paradoxical.aetr.core.model._
+import io.paradoxical.aetr.core.steps.graph.RunManager
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
+import scala.util.Random
 
 class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
-  "Step state" should "sub children" in {
-    val action = Action("action1")
-    val action2 = Action("action2")
-    val action3 = Action("action3")
-    val action4 = Action("action4")
+  trait ActionList {
+    val rootId = StepTreeId.next
 
-    val parallelParent = ParallelParent(List(action3, action4))
+    val action1: Action = Action(id = StepTreeId.next, "action1", root = Some(rootId))
+    val action2 = Action(id = StepTreeId.next, "action2", root = Some(rootId))
+    val action3 = Action(id = StepTreeId.next, "action3", root = Some(rootId))
 
-    val sequentialParent = SequentialParent(List(action, action2))
+    val action4 = Action(id = StepTreeId.next, "action4")
 
-    val root = SequentialParent(List(sequentialParent, parallelParent))
+    val parallelParent = ParallelParent(id = StepTreeId.next, root = Some(rootId)).addTree(action3).addTree(action4)
 
+    val sequentialParent = SequentialParent(id = StepTreeId.next, root = Some(rootId)).addTree(action1).addTree(action2)
+
+    val root = SequentialParent(id = rootId).addTree(sequentialParent).addTree(parallelParent)
+  }
+
+  "Step state" should "sub children" in new ActionList {
     val m = new RunManager(root)
 
     def advance(action: Action*) = {
       val nextActions = m.next()
 
-      if(nextActions.isEmpty) {
+      if (nextActions.isEmpty) {
         assert(m.run.state == StepState.Complete)
-      } else {
-        assert(m.run.state == StepState.Pending)
       }
 
       assert(nextActions.map(_.action) == action.toList)
 
+      nextActions.map(_.run).foreach(a => {
+        m.setState(a.id, StepState.Executing)
+
+        assert(m.run.state == StepState.Executing)
+      })
+
       nextActions.map(_.run).foreach(m.complete)
     }
 
-    advance(action)
+    advance(action1)
     advance(action2)
     advance(action3, action4)
     advance()
+  }
+
+  it should "find a node" in new ActionList {
+    val manager = new RunManager(root)
+
+    val allNodes = manager.flatten
+
+    val toFind = Random.shuffle(allNodes).head
+
+    manager.find(toFind.id).get shouldEqual toFind
   }
 }
