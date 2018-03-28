@@ -7,31 +7,57 @@ import java.util.UUID
 case class Run(
   id: UUID,
   children: Seq[Run],
+  root: UUID,
   repr: StepTree,
   var state: StepState = StepState.Pending,
   var result: Option[String] = None
 )
 
 class RunManager(root: StepTree) {
-  private lazy val runRoot: Run = newRun(root)
+  private lazy val runRoot: Run = newRun()
+  private lazy val rootId = UUID.randomUUID()
 
   def run: Run = runRoot
 
   private def getChildren(node: StepTree): Seq[Run] = {
     node match {
       case p: Parent =>
-        p.children.map(newRun)
+        p.children.map(newRun0)
       case _: Action =>
         Nil
     }
   }
 
-  private def newRun(tree: StepTree): Run = {
+  private def newRun(): Run = {
+    Run(
+      rootId,
+      getChildren(root),
+      rootId,
+      root
+    )
+  }
+
+  private def newRun0(tree: StepTree): Run = {
     Run(
       UUID.randomUUID(),
       getChildren(tree),
+      rootId,
       tree
     )
+  }
+
+  def find(id: UUID): Option[Run] = {
+    def find0(curr: Run): Option[Run] = {
+      if (curr.id == id) {
+        Some(curr)
+      } else {
+        curr.children.collectFirst {
+          case c if find0(c).isDefined => c
+        }
+      }
+    }
+
+    find0(runRoot)
   }
 
   def complete(run: Run): Unit = {
