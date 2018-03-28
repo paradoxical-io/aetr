@@ -1,6 +1,5 @@
 package com.example
 
-import io.paradoxical.aetr.core.steps.StepState
 import io.paradoxical.aetr.core.steps.execution._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,10 +7,10 @@ import org.scalatest.{FlatSpec, Matchers}
 class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
   "Step state" should "sub children" in {
-    val action = Action("action1", NoOp)
-    val action2 = Action("action2", NoOp)
-    val action3 = Action("action3", NoOp)
-    val action4 = Action("action4", NoOp)
+    val action = Action("action1")
+    val action2 = Action("action2")
+    val action3 = Action("action3")
+    val action4 = Action("action4")
 
     val parallelParent = ParallelParent(List(action3, action4))
 
@@ -19,24 +18,19 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     val root = SequentialParent(List(sequentialParent, parallelParent))
 
-    root.state shouldEqual StepState.Pending
+    val m = new RunManager(root)
 
-    root.getNext(None).map(_.action) shouldEqual List(action)
+    def advance(action: Action*) = {
+      val nextActions = m.next()
 
-    action.complete()
+      assert(nextActions.map(_.action) == action.toList)
 
-    root.getNext(None).map(_.action) shouldEqual List(action2)
+      nextActions.map(_.run).foreach(m.complete)
+    }
 
-    action2.complete()
-
-    root.getNext(None).map(_.action) shouldEqual List(action3, action4)
-
-    action3.complete()
-
-    root.getNext(None).map(_.action) shouldEqual List(action4)
-
-    action4.complete()
-
-    root.state shouldEqual StepState.Complete
+    advance(action)
+    advance(action2)
+    advance(action3, action4)
+    advance()
   }
 }
