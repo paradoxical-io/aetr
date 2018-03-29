@@ -20,7 +20,8 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     val parallelParent = ParallelParent(
       id = StepTreeId.next,
       name = "parellelParent",
-      root = Some(rootId)
+      root = Some(rootId),
+      reducer = s => Some(s.mkString(";"))
     ).addTree(action3).addTree(action4)
 
     val sequentialParent = SequentialParent(
@@ -119,5 +120,29 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
   it should "flatten run lists" in new ActionList {
     new RunManager(root).flatten.map(_.repr) shouldEqual new TreeManager(root).flatten
+  }
+
+  it should "pass the result of the previous into the current" in new ActionList {
+    val m = new RunManager(root)
+
+    val actionableAction1 = m.next(seed = Some("seed")).head
+
+    assert(actionableAction1.previousResult.contains("seed"))
+
+    m.complete(actionableAction1.run, result = Some("action1"))
+
+    val actionableAction2 = m.next().head
+
+    assert(actionableAction2.previousResult.contains("action1"))
+
+    m.complete(actionableAction2.run, Some("action2"))
+
+    val parallelActionItems = m.next()
+
+    assert(parallelActionItems.map(_.previousResult) == List(Some("action2"), Some("action2")))
+
+    parallelActionItems.zipWithIndex.foreach { case (a, i) => m.complete(a.run, Some(s"p$i")) }
+
+    m.getFinalResult shouldEqual Option("p0;p1")
   }
 }

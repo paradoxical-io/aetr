@@ -70,6 +70,8 @@ class RunManager(val run: Run) {
     }
   }
 
+  def getFinalResult: Option[String] = getResult(run)
+
   def getResult(run: Run): Option[String] = {
     if (run.children.isEmpty) {
       run.result
