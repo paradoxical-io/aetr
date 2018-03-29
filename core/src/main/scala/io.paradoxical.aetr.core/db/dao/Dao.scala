@@ -1,4 +1,4 @@
-package io.paradoxical.aetr.core.db
+package io.paradoxical.aetr.core.db.dao
 
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.jackson.JacksonSerializer
@@ -68,3 +68,4 @@ class Converters(jacksonSerializer: JacksonSerializer) {
 }
 
 case class ActionData(name: String)
+
