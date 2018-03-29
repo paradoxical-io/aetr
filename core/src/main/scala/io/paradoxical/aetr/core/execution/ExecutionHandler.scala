@@ -22,10 +22,12 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
     actionable.action.execution match {
       case ApiExecution(url) =>
         urlExecutor.execute(runToken, url, actionable.previousResult)
-
-        storage.trySetRunState(actionable.run.id, StepState.Executing)
       case NoOp() =>
     }
+
+    // if by the time this line runs its already complete, dont set it to executing
+    // if we fail here we will end up retrying the execution
+    storage.trySetRunState(actionable.run.id, StepState.Executing)
   }
 
   private def createRunToken(run: Run): RunToken = {

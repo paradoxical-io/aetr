@@ -3,6 +3,7 @@ package io.paradoxical.aetr.core.db.dao
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.jackson.JacksonSerializer
 import java.time.Instant
+import javax.inject.Inject
 
 case class RunDao(
   id: RunId,
@@ -29,7 +30,7 @@ case class StepTreeDao(
   lastUpdatedAt: Instant
 )
 
-class Converters(jacksonSerializer: JacksonSerializer) {
+class Converters @Inject()(jacksonSerializer: JacksonSerializer) {
   def step(stepTreeDao: StepTreeDao, related: List[StepTreeDao]): StepTree = {
     def materialize(id: StepTreeId): Option[StepTree] = {
       related.find(_.id == id).map(r => step(r, related))
