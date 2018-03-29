@@ -1,7 +1,7 @@
 package com.example
 
-import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.graph.{RunManager, TreeManager}
+import io.paradoxical.aetr.core.model._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import scala.util.Random
@@ -11,26 +11,26 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   trait ActionList {
     val rootId = StepTreeId.next
 
-    val action1: Action = Action(id = StepTreeId.next, "action1", root = Some(rootId))
-    val action2 = Action(id = StepTreeId.next, "action2", root = Some(rootId))
-    val action3 = Action(id = StepTreeId.next, "action3", root = Some(rootId))
+    val action1: Action = Action(id = StepTreeId.next, NodeName("action1"), root = Some(rootId))
+    val action2 = Action(id = StepTreeId.next, NodeName("action2"), root = Some(rootId))
+    val action3 = Action(id = StepTreeId.next, NodeName("action3"), root = Some(rootId))
 
-    val action4 = Action(id = StepTreeId.next, "action4")
+    val action4 = Action(id = StepTreeId.next, NodeName("action4"))
 
     val parallelParent = ParallelParent(
       id = StepTreeId.next,
-      name = "parellelParent",
+      name = NodeName("parellelParent"),
       root = Some(rootId),
-      reducer = s => Some(s.mkString(";"))
+      reducer = s => Some(ResultData(s.map(_.value).mkString(";")))
     ).addTree(action3).addTree(action4)
 
     val sequentialParent = SequentialParent(
-      name = "SequentialParent",
+      name = NodeName("SequentialParent"),
       id = StepTreeId.next,
       root = Some(rootId)
     ).addTree(action1).addTree(action2)
 
-    val root = SequentialParent(name = "root", id = rootId).addTree(sequentialParent).addTree(parallelParent)
+    val root = SequentialParent(name = NodeName("root"), id = rootId).addTree(sequentialParent).addTree(parallelParent)
   }
 
   "Step state" should "sub children" in new ActionList {
@@ -125,24 +125,24 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   it should "pass the result of the previous into the current" in new ActionList {
     val m = new RunManager(root)
 
-    val actionableAction1 = m.next(seed = Some("seed")).head
+    val actionableAction1 = m.next(seed = Some(ResultData("seed"))).head
 
-    assert(actionableAction1.previousResult.contains("seed"))
+    assert(actionableAction1.previousResult.contains(ResultData("seed")))
 
-    m.complete(actionableAction1.run, result = Some("action1"))
+    m.complete(actionableAction1.run, result = Some(ResultData("action1")))
 
     val actionableAction2 = m.next().head
 
-    assert(actionableAction2.previousResult.contains("action1"))
+    assert(actionableAction2.previousResult.contains(ResultData("action1")))
 
-    m.complete(actionableAction2.run, Some("action2"))
+    m.complete(actionableAction2.run, Some(ResultData("action2")))
 
     val parallelActionItems = m.next()
 
-    assert(parallelActionItems.map(_.previousResult) == List(Some("action2"), Some("action2")))
+    assert(parallelActionItems.map(_.previousResult) == List(Some(ResultData("action2")), Some(ResultData("action2"))))
 
-    parallelActionItems.zipWithIndex.foreach { case (a, i) => m.complete(a.run, Some(s"p$i")) }
+    parallelActionItems.zipWithIndex.foreach { case (a, i) => m.complete(a.run, Some(ResultData(s"p$i"))) }
 
-    m.getFinalResult shouldEqual Option("p0;p1")
+    m.getFinalResult shouldEqual Option(ResultData("p0;p1"))
   }
 }

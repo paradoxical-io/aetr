@@ -4,7 +4,7 @@ import io.config.ServiceConfig
 import io.exceptions.MaxRetriesAttempted
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.graph.RunManager
-import io.paradoxical.aetr.core.model.StepState
+import io.paradoxical.aetr.core.model.{ResultData, StepState}
 import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.util.{Failure, Success}
@@ -16,7 +16,7 @@ class Completor @Inject()(
 ) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
-  def complete(runToken: RunToken, data: Option[String]): Unit = {
+  def complete(runToken: RunToken, data: Option[ResultData]): Unit = {
     @tailrec
     def completeSafe(retry: Int): Unit = {
       if (retry >= serviceConfig.maxAtomicRetries) {
@@ -31,7 +31,8 @@ class Completor @Inject()(
         manager.complete(run, data)
       })
 
-      storage.tryUpsertRun(root) match {
+      // TODO: try upsert only from node -> parent -> root
+      storage.tryUpsertRun(manager.root) match {
         case Failure(exception) =>
           logger.warn("Unable to upsert run, retrying", exception)
 

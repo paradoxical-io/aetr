@@ -8,7 +8,8 @@ import javax.inject.Inject
 case class RunToken(runId: RunId, rootId: Root)
 
 trait UrlExecutor {
-  def execute(token: RunToken, url: URL, data: Option[String]): Unit
+  // POST url?aetr=runToken <data>
+  def execute(token: RunToken, url: URL, data: Option[ResultData]): Unit
 }
 
 class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
@@ -23,6 +24,7 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
       case ApiExecution(url) =>
         urlExecutor.execute(runToken, url, actionable.previousResult)
       case NoOp() =>
+      // TODO:set this to complete
     }
 
     // if by the time this line runs its already complete, dont set it to executing

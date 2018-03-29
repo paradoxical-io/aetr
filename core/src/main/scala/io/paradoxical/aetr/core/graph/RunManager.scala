@@ -31,7 +31,7 @@ class RunManager(val root: Run) {
     find0(root)
   }
 
-  def complete(run: Run, result: Option[String] = None): Unit = {
+  def complete(run: Run, result: Option[ResultData] = None): Unit = {
     run.state = StepState.Complete
 
     run.result = result
@@ -75,9 +75,9 @@ class RunManager(val root: Run) {
     }
   }
 
-  def getFinalResult: Option[String] = getResult(root)
+  def getFinalResult: Option[ResultData] = getResult(root)
 
-  def getResult(run: Run): Option[String] = {
+  def getResult(run: Run): Option[ResultData] = {
     if (run.children.isEmpty) {
       run.result
     } else {
@@ -100,11 +100,11 @@ class RunManager(val root: Run) {
     }
   }
 
-  def next(seed: Option[String] = None): Seq[Actionable] = {
+  def next(seed: Option[ResultData] = None): Seq[Actionable] = {
     next(root, seed)
   }
 
-  private def next(run: Run, data: Option[String]): Seq[Actionable] = {
+  private def next(run: Run, data: Option[ResultData]): Seq[Actionable] = {
     run.repr match {
       case x: Parent =>
         x match {

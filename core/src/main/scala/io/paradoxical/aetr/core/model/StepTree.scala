@@ -2,14 +2,14 @@ package io.paradoxical.aetr.core.model
 
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonSubTypes, JsonTypeInfo}
-import io.paradoxical.global.tiny.UuidValue
+import io.paradoxical.global.tiny.{StringValue, UuidValue}
 import java.net.URL
 import java.util.UUID
 
 sealed trait StepTree {
   val id: StepTreeId
 
-  val name: String
+  val name: NodeName
 
   val root: Option[StepTreeId]
 }
@@ -22,7 +22,7 @@ sealed trait Parent extends StepTree {
 
 case class SequentialParent(
   id: StepTreeId,
-  name: String,
+  name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None
 ) extends Parent {
@@ -33,10 +33,10 @@ case class SequentialParent(
 
 case class ParallelParent(
   id: StepTreeId,
-  name: String,
+  name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None,
-  reducer: (Seq[String]) => Option[String] = _ => None
+  reducer: (Seq[ResultData]) => Option[ResultData] = _ => None
 ) extends Parent {
   override def addTree(stepTree: StepTree): Parent = {
     copy(children = children :+ stepTree)
@@ -45,7 +45,7 @@ case class ParallelParent(
 
 case class Action(
   id: StepTreeId,
-  name: String,
+  name: NodeName,
   root: Option[StepTreeId] = None,
   execution: Execution = NoOp()
 ) extends StepTree
@@ -68,3 +68,7 @@ case class StepTreeId(value: UUID) extends UuidValue
 sealed trait Execution
 case class ApiExecution(url: URL) extends Execution
 case class NoOp() extends Execution
+
+case class NodeName(value: String) extends StringValue
+
+case class ResultData(value: String) extends StringValue

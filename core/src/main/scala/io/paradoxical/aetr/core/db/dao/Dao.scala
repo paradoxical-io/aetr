@@ -13,7 +13,7 @@ case class RunDao(
   version: Version,
   stepTreeId: StepTreeId,
   state: StepState,
-  result: Option[String],
+  result: Option[ResultData],
   createdAt: Instant,
   lastUpdatedAt: Instant,
   stateUpdatedAt: Instant
@@ -21,7 +21,7 @@ case class RunDao(
 
 case class StepTreeDao(
   id: StepTreeId,
-  name: String,
+  name: NodeName,
   root: Option[StepTreeId],
   stepType: StepType,
   children: List[StepTreeId],

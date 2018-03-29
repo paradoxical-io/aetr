@@ -55,14 +55,14 @@ trait Storage {
    *
    * @return
    */
-  def tryAcquireRuns(): Option[AcquisitionLock[List[Run]]]
+  def tryAcquire(run: Run): Option[AcquisitionLock[Run]]
 
   /**
    * Release the lock
    *
    * @param id
    */
-  def releaseRuns(id: AcquisitionLockId): Unit
+  def releaseRun(id: AcquisitionLockId): Unit
 
   /**
    * Find runs related to a step tree

@@ -11,7 +11,7 @@ case class Run(
   version: Version = Version(1),
   var parent: Option[Run] = None,
   var state: StepState = StepState.Pending,
-  var result: Option[String] = None
+  var result: Option[ResultData] = None
 ) {
   override def toString: String = repr.toString
 }
@@ -23,4 +23,4 @@ case class RunInstanceId(value: UUID) extends RunId
 
 case class Version(value: Long) extends LongValue
 
-case class Actionable(run: Run, action: Action, previousResult: Option[String])
+case class Actionable(run: Run, action: Action, previousResult: Option[ResultData])
