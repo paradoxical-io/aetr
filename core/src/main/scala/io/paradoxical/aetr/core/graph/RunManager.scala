@@ -33,6 +33,7 @@ class RunManager(val run: Run) {
 
   def complete(run: Run, result: Option[String] = None): Unit = {
     run.state = StepState.Complete
+
     run.result = result
 
     run.parent.foreach(sync)

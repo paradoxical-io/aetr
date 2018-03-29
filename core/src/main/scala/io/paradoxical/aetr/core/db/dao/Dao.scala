@@ -70,5 +70,3 @@ class Converters(jacksonSerializer: JacksonSerializer) {
     )
   }
 }
-
-case class UrlActionData(url: String)
