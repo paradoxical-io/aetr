@@ -85,14 +85,14 @@ class RunManager(val root: Run) {
         run.repr match {
           case x: Parent =>
             x match {
-              case _: SequentialParent =>
+              case p: SequentialParent =>
                 run.children.lastOption.flatMap(_.result)
               case p: ParallelParent =>
                 val results = run.children.flatMap(_.result)
 
-                p.reducer(results)
+                p.reducer.reduce(results).map(p.mapper.map)
             }
-          case _: Action => run.result
+          case action: Action => run.result.map(action.mapper.map)
         }
       } else {
         None
@@ -115,7 +115,14 @@ class RunManager(val root: Run) {
                 data
               } else {
                 // find the last one who completed and take their result
-                run.children.filter(_.state == StepState.Complete).lastOption.flatMap(_.result)
+                // A matched child that maps its result applies its data mapper here.
+                // NOTE that mappers are not applied to root seed data
+                run.children.filter(_.state == StepState.Complete).lastOption.flatMap(run => {
+                  run.repr match {
+                    case canMap: MapsResult => run.result.map(canMap.mapper.map)
+                    case _ => run.result
+                  }
+                })
               }
 
             run.children.find(_.state == StepState.Pending).map(next(_, previousResult)).getOrElse(Nil)
