@@ -6,7 +6,7 @@ import io.paradoxical.jackson.JacksonSerializer
 case class RunDao(
   id: RunId,
   children: Seq[RunId],
-  root: RunId,
+  root: Root,
   parent: Option[RunId],
   stepTreeId: StepTreeId,
   state: StepState,

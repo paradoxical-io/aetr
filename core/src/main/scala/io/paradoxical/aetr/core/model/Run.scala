@@ -6,7 +6,7 @@ import java.util.UUID
 case class Run(
   id: RunId,
   var children: Seq[Run],
-  root: RunId,
+  root: Root,
   repr: StepTree,
   versionId: VersionId = VersionId(1),
   var parent: Option[Run] = None,
@@ -16,7 +16,10 @@ case class Run(
   override def toString: String = repr.toString
 }
 
-case class RunId(value: UUID) extends UuidValue
+trait RunId extends UuidValue with Product
+
+case class Root(value: UUID) extends RunId
+case class RunInstanceId(value: UUID) extends RunId
 
 case class VersionId(value: Long) extends LongValue
 
