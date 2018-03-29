@@ -50,7 +50,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
         assert(m.run.state == StepState.Executing)
       })
 
-      nextActions.map(_.run).foreach(m.complete)
+      nextActions.map(_.run).foreach(m.complete(_))
     }
 
     advance(action1)
@@ -83,7 +83,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
         assert(m.run.state == state)
       })
 
-      nextActions.map(_.run).foreach(m.complete)
+      nextActions.map(_.run).foreach(m.complete(_))
     }
 
     advance(StepState.Executing, action1)

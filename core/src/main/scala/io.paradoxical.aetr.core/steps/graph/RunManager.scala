@@ -31,23 +31,26 @@ class RunManager(val run: Run) {
     find0(run)
   }
 
-  def complete(run: Run): Unit = {
+  def complete(run: Run, result: Option[String] = None): Unit = {
     run.state = StepState.Complete
+    run.result = result
 
-    run.parent.foreach(syncState)
+    run.parent.foreach(sync)
   }
 
-  private def syncState(run: Run): Unit = {
+  private def sync(run: Run): Unit = {
     run.state = determineState(run)
 
-    run.parent.foreach(syncState)
+    run.result = getResult(run)
+
+    run.parent.foreach(sync)
   }
 
   def setState(run: RunId, state: StepState): Unit = {
     find(run).foreach(r => {
       r.state = state
 
-      syncState(r)
+      sync(r)
     })
   }
 
@@ -72,7 +75,18 @@ class RunManager(val run: Run) {
       run.result
     } else {
       if (determineState(run) == StepState.Complete) {
-        run.children.lastOption.flatMap(getResult)
+        run.repr match {
+          case x: Parent =>
+            x match {
+              case p: SequentialParent =>
+                run.children.lastOption.flatMap(_.result)
+              case p: ParallelParent =>
+                val results = run.children.flatMap(_.result)
+
+                p.reducer(results)
+            }
+          case x: Action => run.result
+        }
       } else {
         None
       }

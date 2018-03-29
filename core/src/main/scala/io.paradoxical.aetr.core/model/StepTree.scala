@@ -35,7 +35,8 @@ case class ParallelParent(
   id: StepTreeId,
   name: String,
   children: List[StepTree] = Nil,
-  root: Option[StepTreeId] = None
+  root: Option[StepTreeId] = None,
+  reducer: (Seq[String]) => Option[String] = _ => None
 ) extends Parent {
   override def addTree(stepTree: StepTree): Parent = {
     copy(children = children :+ stepTree)
