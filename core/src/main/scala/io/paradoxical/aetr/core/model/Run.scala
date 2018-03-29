@@ -8,7 +8,7 @@ case class Run(
   var children: Seq[Run],
   root: Root,
   repr: StepTree,
-  versionId: VersionId = VersionId(1),
+  version: Version = Version(1),
   var parent: Option[Run] = None,
   var state: StepState = StepState.Pending,
   var result: Option[String] = None
@@ -21,6 +21,6 @@ trait RunId extends UuidValue with Product
 case class Root(value: UUID) extends RunId
 case class RunInstanceId(value: UUID) extends RunId
 
-case class VersionId(value: Long) extends LongValue
+case class Version(value: Long) extends LongValue
 
 case class Actionable(run: Run, action: Action, previousResult: Option[String])

@@ -40,7 +40,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       val nextActions = m.next()
 
       if (nextActions.isEmpty) {
-        assert(m.run.state == StepState.Complete)
+        assert(m.root.state == StepState.Complete)
       }
 
       assert(nextActions.map(_.action) == action.toList)
@@ -48,7 +48,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       nextActions.map(_.run).foreach(a => {
         m.setState(a.id, StepState.Executing)
 
-        assert(m.run.state == StepState.Executing)
+        assert(m.root.state == StepState.Executing)
       })
 
       nextActions.map(_.run).foreach(m.complete(_))
@@ -73,7 +73,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       val nextActions = m.next()
 
       if (nextActions.isEmpty) {
-        assert(m.run.state == StepState.Complete)
+        assert(m.root.state == StepState.Complete)
       }
 
       assert(nextActions.map(_.action) == action.toList)
@@ -81,7 +81,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       nextActions.map(_.run).foreach(a => {
         m.setState(a.id, state)
 
-        assert(m.run.state == state)
+        assert(m.root.state == state)
       })
 
       nextActions.map(_.run).foreach(m.complete(_))
@@ -93,7 +93,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     m.setState(findByStep(action3.id).id, StepState.Error)
 
-    assert(m.run.state == StepState.Error)
+    assert(m.root.state == StepState.Error)
 
     m.setState(findByStep(action3.id).id, StepState.Pending)
 

@@ -12,8 +12,12 @@ trait UrlExecutor {
 }
 
 class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
+  protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
+
   def execute(actionable: Actionable): Unit = {
     val runToken = createRunToken(actionable.run)
+
+    logger.info(s"Executing $actionable with runtoken $runToken")
 
     actionable.action.execution match {
       case ApiExecution(url) =>

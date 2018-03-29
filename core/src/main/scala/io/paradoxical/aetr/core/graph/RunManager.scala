@@ -2,7 +2,7 @@ package io.paradoxical.aetr.core.steps.graph
 
 import io.paradoxical.aetr.core.model._
 
-class RunManager(val run: Run) {
+class RunManager(val root: Run) {
   def this(stepTree: StepTree) {
     this(new TreeManager(stepTree).newRun())
   }
@@ -16,7 +16,7 @@ class RunManager(val run: Run) {
       }
     }
 
-    all0(run, Nil)
+    all0(root, Nil)
   }
 
   def find(id: RunId): Option[Run] = {
@@ -28,7 +28,7 @@ class RunManager(val run: Run) {
       }
     }
 
-    find0(run)
+    find0(root)
   }
 
   def complete(run: Run, result: Option[String] = None): Unit = {
@@ -37,6 +37,10 @@ class RunManager(val run: Run) {
     run.result = result
 
     run.parent.foreach(sync)
+  }
+
+  def state: StepState = {
+    determineState(root)
   }
 
   private def sync(run: Run): Unit = {
@@ -71,7 +75,7 @@ class RunManager(val run: Run) {
     }
   }
 
-  def getFinalResult: Option[String] = getResult(run)
+  def getFinalResult: Option[String] = getResult(root)
 
   def getResult(run: Run): Option[String] = {
     if (run.children.isEmpty) {
@@ -81,14 +85,14 @@ class RunManager(val run: Run) {
         run.repr match {
           case x: Parent =>
             x match {
-              case p: SequentialParent =>
+              case _: SequentialParent =>
                 run.children.lastOption.flatMap(_.result)
               case p: ParallelParent =>
                 val results = run.children.flatMap(_.result)
 
                 p.reducer(results)
             }
-          case x: Action => run.result
+          case _: Action => run.result
         }
       } else {
         None
@@ -97,7 +101,7 @@ class RunManager(val run: Run) {
   }
 
   def next(seed: Option[String] = None): Seq[Actionable] = {
-    next(run, seed)
+    next(root, seed)
   }
 
   private def next(run: Run, data: Option[String]): Seq[Actionable] = {

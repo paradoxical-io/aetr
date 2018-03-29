@@ -9,10 +9,14 @@ import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.util.{Failure, Success}
 
-class Completor @Inject()(storage: Storage, serviceConfig: ServiceConfig) {
+class Completor @Inject()(
+  storage: Storage,
+  serviceConfig: ServiceConfig,
+  advancer: Advancer
+) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
-  def complete(runToken: RunToken): Unit = {
+  def complete(runToken: RunToken, data: Option[String]): Unit = {
     @tailrec
     def completeSafe(retry: Int): Unit = {
       if (retry >= serviceConfig.maxAtomicRetries) {
@@ -21,7 +25,11 @@ class Completor @Inject()(storage: Storage, serviceConfig: ServiceConfig) {
 
       val root = storage.loadRun(runToken.rootId)
 
-      new RunManager(root).setState(runToken.runId, StepState.Complete)
+      val manager = new RunManager(root)
+
+      manager.find(runToken.runId).foreach(run => {
+        manager.complete(run, data)
+      })
 
       storage.tryUpsertRun(root) match {
         case Failure(exception) =>
@@ -30,6 +38,10 @@ class Completor @Inject()(storage: Storage, serviceConfig: ServiceConfig) {
           completeSafe(retry + 1)
         case Success(value) =>
           logger.info(s"Upserted root ${root.id}")
+
+          if(manager.state != StepState.Complete) {
+            advancer.advance(root.root)
+          }
       }
     }
 

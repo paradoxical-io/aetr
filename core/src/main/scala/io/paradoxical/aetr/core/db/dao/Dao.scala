@@ -2,15 +2,19 @@ package io.paradoxical.aetr.core.db.dao
 
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.jackson.JacksonSerializer
+import java.time.Instant
 
 case class RunDao(
   id: RunId,
   children: Seq[RunId],
   root: Root,
   parent: Option[RunId],
+  version: Version,
   stepTreeId: StepTreeId,
   state: StepState,
-  result: Option[String]
+  result: Option[String],
+  createdAt: Instant,
+  lastUpdatedAt: Instant
 )
 
 case class StepTreeDao(
@@ -19,7 +23,9 @@ case class StepTreeDao(
   root: Option[StepTreeId],
   stepType: StepType,
   children: List[StepTreeId],
-  executionJson: String
+  executionJson: String,
+  createdAt: Instant,
+  lastUpdatedAt: Instant
 )
 
 class Converters(jacksonSerializer: JacksonSerializer) {
@@ -61,6 +67,7 @@ class Converters(jacksonSerializer: JacksonSerializer) {
       root = runDao.root,
       repr = repr,
       state = runDao.state,
+      version = runDao.version,
       result = runDao.result,
       children = runDao.children.map(childId => {
         val relatedDao = related.find(c => c.id == childId).get

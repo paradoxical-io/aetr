@@ -1,12 +1,14 @@
 package io.paradoxical.aetr.core.execution
 
 import io.paradoxical.aetr.core.db.Storage
-import io.paradoxical.aetr.core.model.Run
+import io.paradoxical.aetr.core.model.{Root, Run}
 import io.paradoxical.aetr.core.steps.graph.RunManager
 import javax.inject.Inject
 
 class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
-  def advanceNext(): Unit = {
+  protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
+
+  def advanceAll(): Unit = {
     val lock = storage.tryAcquireRuns()
 
     lock.foreach(lock => {
@@ -14,6 +16,12 @@ class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
     })
 
     lock.foreach(l => storage.releaseRuns(l.id))
+  }
+
+  def advance(root: Root): Unit = {
+    logger.info(s"Advancing root $root")
+
+    dispatch(storage.loadRun(root))
   }
 
   private def dispatch(run: Run): Unit = {
