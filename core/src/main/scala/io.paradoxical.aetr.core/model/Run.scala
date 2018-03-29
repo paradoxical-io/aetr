@@ -17,4 +17,4 @@ case class Run(
 
 case class RunId(value: UUID) extends UuidValue
 
-case class Actionable(run: Run, action: Action, result: Option[String])
+case class Actionable(run: Run, action: Action, previousResult: Option[String])

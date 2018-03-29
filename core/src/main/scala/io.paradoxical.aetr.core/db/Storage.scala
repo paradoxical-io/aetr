@@ -13,7 +13,7 @@ trait Storage {
 
   def deleteRun(run: Run): Unit
 
-  def getRun(id: RunId): Run
+  def loadRun(root: RunId): Run
 }
 
 trait TreeLinker {

@@ -88,19 +88,22 @@ class RunManager(val run: Run) {
       case x: Parent =>
         x match {
           case _: SequentialParent =>
-            val payload =
+            val previousResult =
               if (run.children.forall(_.state == StepState.Pending)) {
+                // nobody has completed so if a special seed was sent, use that
                 data
               } else {
+                // find the last one who completed and take their result
                 run.children.filter(_.state == StepState.Complete).lastOption.flatMap(_.result)
               }
 
-            run.children.find(_.state == StepState.Pending).map(next(_, payload)).getOrElse(Nil)
+            run.children.find(_.state == StepState.Pending).map(next(_, previousResult)).getOrElse(Nil)
           case _: ParallelParent =>
+            // all we can do is use the seed from whatever the last data was
             run.children.filter(_.state == StepState.Pending).flatMap(next(_, data))
         }
       case x: Action if run.state == StepState.Pending =>
-        List(Actionable(run, x, None))
+        List(Actionable(run, x, data))
     }
   }
 }
