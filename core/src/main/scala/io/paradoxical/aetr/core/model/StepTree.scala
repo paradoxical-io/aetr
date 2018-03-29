@@ -20,6 +20,10 @@ sealed trait Parent extends StepTree {
   def addTree(stepTree: StepTree): Parent
 }
 
+trait MapsResult {
+  def mapper: Mapper
+}
+
 case class SequentialParent(
   id: StepTreeId,
   name: NodeName,
@@ -36,8 +40,9 @@ case class ParallelParent(
   name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None,
-  reducer: (Seq[ResultData]) => Option[ResultData] = _ => None
-) extends Parent {
+  reducer: Reducer = Reducer.noop,
+  mapper: Mapper = Mapper.identity // Applied to the final, reduced result
+) extends Parent with MapsResult {
   override def addTree(stepTree: StepTree): Parent = {
     copy(children = children :+ stepTree)
   }
@@ -47,9 +52,9 @@ case class Action(
   id: StepTreeId,
   name: NodeName,
   root: Option[StepTreeId] = None,
-  execution: Execution = NoOp()
-) extends StepTree
-
+  execution: Execution = NoOp(),
+  mapper: Mapper = Mapper.identity
+) extends StepTree with MapsResult
 
 object StepTreeId {
   def next = StepTreeId(UUID.randomUUID())
