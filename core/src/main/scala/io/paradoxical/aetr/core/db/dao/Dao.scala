@@ -19,12 +19,26 @@ case class RunDao(
   stateUpdatedAt: Instant
 )
 
+/** *
+ *
+ * @param id
+ * @param name
+ * @param root
+ * @param stepType
+ * @param children
+ * @param roots Related tree roots to query for when slurping. These are trees that are linked to
+ *              in children and need to be materialized in the related set list
+ * @param executionJson
+ * @param createdAt
+ * @param lastUpdatedAt
+ */
 case class StepTreeDao(
   id: StepTreeId,
   name: NodeName,
-  root: Option[StepTreeId],
   stepType: StepType,
   children: List[StepTreeId],
+  root: Option[StepTreeId],
+  roots: List[StepTreeId],
   executionJson: String,
   createdAt: Instant,
   lastUpdatedAt: Instant
