@@ -14,7 +14,8 @@ case class RunDao(
   state: StepState,
   result: Option[String],
   createdAt: Instant,
-  lastUpdatedAt: Instant
+  lastUpdatedAt: Instant,
+  stateUpdatedAt: Instant
 )
 
 case class StepTreeDao(

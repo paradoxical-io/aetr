@@ -2,7 +2,7 @@ package io.paradoxical.aetr.core.execution
 
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.model.{Root, Run}
-import io.paradoxical.aetr.core.steps.graph.RunManager
+import io.paradoxical.aetr.core.graph.RunManager
 import javax.inject.Inject
 
 class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {

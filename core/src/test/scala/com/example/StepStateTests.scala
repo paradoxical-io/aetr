@@ -1,7 +1,7 @@
 package com.example
 
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.aetr.core.steps.graph.{RunManager, TreeManager}
+import io.paradoxical.aetr.core.graph.{RunManager, TreeManager}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import scala.util.Random

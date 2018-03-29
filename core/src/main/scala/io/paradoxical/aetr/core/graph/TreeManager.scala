@@ -1,4 +1,4 @@
-package io.paradoxical.aetr.core.steps.graph
+package io.paradoxical.aetr.core.graph
 
 import io.paradoxical.aetr.core.model
 import io.paradoxical.aetr.core.model._
