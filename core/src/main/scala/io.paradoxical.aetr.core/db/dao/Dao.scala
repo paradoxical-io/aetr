@@ -15,10 +15,11 @@ case class RunDao(
 
 case class StepTreeDao(
   id: StepTreeId,
+  name: String,
   root: Option[StepTreeId],
   stepType: StepType,
   children: List[StepTreeId],
-  configJson: Option[String]
+  executionJson: String
 )
 
 class Converters(jacksonSerializer: JacksonSerializer) {
@@ -31,20 +32,23 @@ class Converters(jacksonSerializer: JacksonSerializer) {
       case StepType.Sequential =>
         SequentialParent(
           id = stepTreeDao.id,
+          name = stepTreeDao.name,
           root = stepTreeDao.root,
           children = stepTreeDao.children.flatMap(materialize)
         )
       case StepType.Parallel =>
         ParallelParent(
           id = stepTreeDao.id,
+          name = stepTreeDao.name,
           root = stepTreeDao.root,
           children = stepTreeDao.children.flatMap(materialize)
         )
       case StepType.Action =>
         Action(
           id = stepTreeDao.id,
+          name = stepTreeDao.name,
           root = stepTreeDao.root,
-          name = stepTreeDao.configJson.map(jacksonSerializer.fromJson[ActionData]).map(_.name).getOrElse("")
+          execution = jacksonSerializer.fromJson[Execution](stepTreeDao.executionJson)
         )
     }
   }
@@ -67,5 +71,4 @@ class Converters(jacksonSerializer: JacksonSerializer) {
   }
 }
 
-case class ActionData(name: String)
-
+case class UrlActionData(url: String)

@@ -17,11 +17,19 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     val action4 = Action(id = StepTreeId.next, "action4")
 
-    val parallelParent = ParallelParent(id = StepTreeId.next, root = Some(rootId)).addTree(action3).addTree(action4)
+    val parallelParent = ParallelParent(
+      id = StepTreeId.next,
+      name = "parellelParent",
+      root = Some(rootId)
+    ).addTree(action3).addTree(action4)
 
-    val sequentialParent = SequentialParent(id = StepTreeId.next, root = Some(rootId)).addTree(action1).addTree(action2)
+    val sequentialParent = SequentialParent(
+      name = "SequentialParent",
+      id = StepTreeId.next,
+      root = Some(rootId)
+    ).addTree(action1).addTree(action2)
 
-    val root = SequentialParent(id = rootId).addTree(sequentialParent).addTree(parallelParent)
+    val root = SequentialParent(name = "root", id = rootId).addTree(sequentialParent).addTree(parallelParent)
   }
 
   "Step state" should "sub children" in new ActionList {
