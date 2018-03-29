@@ -25,6 +25,8 @@ class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
   }
 
   private def dispatch(run: Run): Unit = {
+    require(run.id == run.root, s"Only the root can advance, but got ${run.id}!")
+
     new RunManager(run).next().foreach(executionHandler.execute)
   }
 }
