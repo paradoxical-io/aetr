@@ -22,8 +22,8 @@ class StepDb @Inject()(
                      with recursive getChild(kids) as (
                        select ${stepTreeId}
                        union all
-                       select child from children
-                       join getChild on kids = children.id
+                       select child_id from step_children
+                       join getChild on kids = step_children.id
                      )
                      select * from getChild""".as[StepTreeId]
 

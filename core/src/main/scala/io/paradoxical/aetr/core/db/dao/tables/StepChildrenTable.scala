@@ -12,7 +12,15 @@ case class StepChildrenDao(
   childId: StepTreeId
 )
 
-class StepChildren @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extends SlickDAO {
+object StepChildren {
+  val TableName = "step_children"
+}
+
+class StepChildren @Inject()(
+  val steps: Steps,
+  val driver: JdbcProfile,
+  dataMappers: DataMappers
+) extends SlickDAO {
 
   import dataMappers._
   import driver.api._
@@ -25,13 +33,18 @@ class StepChildren @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers
 
     def childOrder = column[Long]("child_order")
 
-    def child = column[StepTreeId]("child_id")
+    def childId = column[StepTreeId]("child_id")
+
+    def pk = primaryKey("pk_id_order_child", (id, childOrder, childId))
+
+    def idFk = foreignKey("step_children_id_steps_id_fk", id, steps.query)(_.id)
+    def childIdFk = foreignKey("step_children_child_id_steps_id_fk", childId, steps.query)(_.id)
 
     override def * =
       (
         id,
         childOrder,
-        child
+        childId
       ) <> (StepChildrenDao.tupled, StepChildrenDao.unapply)
   }
 

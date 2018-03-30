@@ -7,7 +7,9 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_USER: aetr
+      POSTGRES_PASSWORD: aetr
+      POSTGRES_DB: aetr
 
   adminer:
     image: adminer

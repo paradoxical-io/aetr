@@ -26,7 +26,7 @@ class Steps @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) exten
   override type TableType = StepsTable
 
   class StepsTable(tag: Tag) extends DAOTable(tag, "steps") {
-    def id = column[StepTreeId]("id", O.AutoInc)
+    def id = column[StepTreeId]("id", O.PrimaryKey)
 
     def name = column[NodeName]("name")
 

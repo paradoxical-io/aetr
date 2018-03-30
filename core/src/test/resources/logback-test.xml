@@ -1,16 +1,49 @@
 <configuration debug="false">
-  <!--&lt;!&ndash; Console Appender &ndash;&gt;-->
-  <!--<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
-    <!--<encoder>-->
-      <!--<pattern>%date %.-3level %-25X{traceId} %-25logger{0} %msg%n</pattern>-->
-    <!--</encoder>-->
-  <!--</appender>-->
+  <!-- DB Log (Rollover every 50MB, max 11 logs) -->
+  <appender name="DB-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${log.db.output:-db.log}</file>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>DEBUG</level>
+    </filter>
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>${log.db.output:-db.log}.%i</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>10</maxIndex>
+    </rollingPolicy>
 
-  <!--&lt;!&ndash; Per Package Config &ndash;&gt;-->
-  <!--<logger name="com.twitter" level="debug"/>-->
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>50MB</maxFileSize>
+    </triggeringPolicy>
 
-  <!--&lt;!&ndash; Root Logger &ndash;&gt;-->
-  <!--<root level="info">-->
-    <!--<appender-ref ref="STDOUT"/>-->
-  <!--</root>-->
+    <encoder>
+      <pattern>%d [%X{traceId}] [%X{callerId}] [%thread] %-5level %logger{36} %marker - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Slick Logging -->
+  <!-- Additivity set to false so we don't propagate to root appenders -->
+  <logger name="slick.jdbc.DriverDataSource"              additivity="false" level="${log.slick.jdbc.driverDataSource:-info}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.jdbc.JdbcBackend.statement"         additivity="false" level="${log.slick.jdbc.statement:-debug}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.jdbc.JdbcBackend.parameter"         additivity="false" level="${log.slick.jdbc.parameter:-debug}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.jdbc.JdbcBackend.benchmark"         additivity="false" level="${log.slick.jdbc.benchmark:-debug}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.jdbc.StatementInvoker.result"       additivity="false" level="${log.slick.jdbc.result:-info}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.jdbc.JdbcModelBuilder"              additivity="false" level="${log.slick.createModel:-info}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.relational.ResultConverterCompiler" additivity="false" level="${log.slick.resultConverter:-inherited}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
+  <logger name="slick.util.AsyncExecutor"                 additivity="false" level="${log.slick.util.asyncExecutor:-inherited}">
+    <appender-ref ref="DB-FILE" />
+  </logger>
 </configuration>

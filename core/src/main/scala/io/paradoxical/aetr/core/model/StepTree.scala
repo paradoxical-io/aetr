@@ -25,7 +25,7 @@ trait MapsResult {
 }
 
 case class SequentialParent(
-  id: StepTreeId,
+  id: StepTreeId = StepTreeId.next,
   name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None
@@ -36,7 +36,7 @@ case class SequentialParent(
 }
 
 case class ParallelParent(
-  id: StepTreeId,
+  id: StepTreeId = StepTreeId.next,
   name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None,
@@ -49,7 +49,7 @@ case class ParallelParent(
 }
 
 case class Action(
-  id: StepTreeId,
+  id: StepTreeId = StepTreeId.next,
   name: NodeName,
   root: Option[StepTreeId] = None,
   execution: Execution = NoOp(),

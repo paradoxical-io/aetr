@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 
 object Postgres {
-  def   docker(): PostgresDocker = {
+  def docker(): PostgresDocker = {
     val config = DockerClientConfig.
       builder().
       imageName("postgres:10.3-alpine").
@@ -40,7 +40,7 @@ object Postgres {
 case class PostgresDocker(container: Container, port: Int, user: String, password: String) {
   Class.forName("org.postgresql.Driver")
 
-  def close() = container.close()
+  def close() = container.getClient().killContainerCmd(container.getContainerInfo.getId).exec()
 
   def isOpen: Boolean = {
     try {
@@ -61,25 +61,21 @@ case class PostgresDocker(container: Container, port: Int, user: String, passwor
     s"jdbc:postgresql://localhost:$port/$db"
   }
 
-  def createDatabase(db: String, charset: String = "utf8mb4", collation: String = "utf8mb4_unicode_ci"): String = {
+  def createDatabase(db: String): String = {
     connect { conn =>
-      conn.createStatement().execute(makeDatabaseString(db, charset, collation))
+      conn.createStatement().execute(makeDatabaseString(db))
     }
 
     jdbc(db)
   }
 
-  private def makeDatabaseString(db: String, charset: String, collation: String): String = {
-    val createDbString = s"CREATE DATABASE $db"
-    val charsetString = s"DEFAULT CHARACTER SET $charset"
-    val collationString = s"DEFAULT COLLATE $collation"
-
-    s"$createDbString $charsetString $collationString"
+  private def makeDatabaseString(db: String): String = {
+    s"CREATE DATABASE $db WITH OWNER = $user"
   }
 
   def dropDatabase(db: String): String = {
     connect { conn =>
-      conn.createStatement().execute(s"drop database if exists ${db}")
+      conn.createStatement().execute(s"drop database if exists ${db};")
     }
 
     jdbc(db)
