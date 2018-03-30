@@ -32,6 +32,8 @@ lazy val core = project.settings(commonSettings).settings(
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % versions.logback,
       "io.paradoxical" %% "paradox-scala-jackson" % versions.paradox.global,
+      "io.paradoxical" %% "paradox-scala-util" % versions.paradox.global,
+      "io.paradoxical" %% "slick" % versions.paradox.slick,
       "io.paradoxical" %% "finatra-server" % versions.paradox.finatra,
       "io.paradoxical" %% "finatra-swagger" % versions.paradox.finatra,
       "io.paradoxical" %% "tasks" % versions.paradox.tasks,
