@@ -7,7 +7,7 @@ import io.paradoxical.common.extensions.Extensions._
 import net.codingwell.scalaguice.InjectorExtensions._
 
 class DbTests extends PostgresDbTestBase {
-  "DB" should "create" in withDb { injector =>
+  "DB" should "insert and update" in withDb { injector =>
     val db = injector.instance[StepDb]
 
     val leaf1 = Action(name = NodeName("leaf1"))
@@ -35,5 +35,33 @@ class DbTests extends PostgresDbTestBase {
     db.upsertStep(parentWithoutChild1).waitForResult()
 
     db.getTree(parent.id).waitForResult() shouldEqual parentWithoutChild1
+  }
+
+  it should "work on nested trees" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1: Action = Action(name = NodeName("leaf1"))
+
+    val leaf2 = Action(name = NodeName("leaf2"))
+
+    val branch1 = SequentialParent(name = NodeName("branch1"), children = List(leaf1, leaf2))
+
+    val branch2 = SequentialParent(name = NodeName("branch2"), children = List(leaf1, leaf2))
+
+    val branch3 = ParallelParent(name = NodeName("parallel"), children = List(leaf1, leaf2))
+
+    val root = SequentialParent(name = NodeName("root"), children = List(branch3, branch2, branch1))
+
+    db.upsertStep(root).waitForResult()
+
+    db.getTree(root.id).waitForResult() shouldEqual root
+
+    // drop a tree
+
+    val rootMinusSubTree = root.copy(children = List(branch2, branch1))
+
+    db.upsertStep(rootMinusSubTree).waitForResult()
+
+    db.getTree(root.id).waitForResult() shouldEqual rootMinusSubTree
   }
 }

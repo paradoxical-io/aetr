@@ -13,19 +13,19 @@ class PostgresDbTestBase extends TestBase {
   val docker = Postgres.docker()
 
   def withDb(test: Injector => Any): Unit = {
-    val db = "testDb" + Random.nextInt(1000)
+    val db = "test_db_" + Math.abs(Random.nextInt())
 
     val defaultConfig = ConfigLoader.load()
 
+    docker.createDatabase(db)
+
     val testConfig = defaultConfig.copy(db = defaultConfig.db.copy(
-      url = docker.url(docker.user),
+      url = docker.url(db),
       credentials = RdbCredentials(
         user = docker.user,
         password = docker.password
       )
     ))
-
-    docker.createDatabase(db)
 
     val injector = Guice.createInjector(Modules(config = Some(testConfig)): _*)
 

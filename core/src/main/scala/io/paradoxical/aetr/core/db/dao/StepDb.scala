@@ -36,8 +36,8 @@ class StepDb @Inject()(
     }
 
     provider.withDB(nodesQuery.withPinnedSession).map {
-      case (ids, nodes) =>
-        val allSteps = composer.reconstitute(nodes, ids)
+      case (children, nodes) =>
+        val allSteps = composer.reconstitute(nodes, children)
 
         allSteps.find(_.id == stepTreeId).get
     }

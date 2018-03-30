@@ -66,11 +66,13 @@ case class PostgresDocker(container: Container, port: Int, user: String, passwor
       conn.createStatement().execute(makeDatabaseString(db))
     }
 
+    connectWith(jdbc(db)) { c => }
+
     jdbc(db)
   }
 
   private def makeDatabaseString(db: String): String = {
-    s"CREATE DATABASE $db WITH OWNER = $user"
+    s"CREATE DATABASE $db"
   }
 
   def dropDatabase(db: String): String = {
