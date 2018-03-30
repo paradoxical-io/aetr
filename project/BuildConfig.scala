@@ -9,6 +9,7 @@ object BuildConfig {
       val global = "1.2"
       val tasks = "1.5"
       val slick = "1.0"
+      val docker = "1.24"
     }
     val guice = "4.0"
     val mockito = "1.9.5"
@@ -16,6 +17,7 @@ object BuildConfig {
     val scalatest = "3.0.0"
     val scalacheck = "1.13.4"
     val scalaGuice = "4.1.1"
+    val postgres = "42.2.2"
   }
 
   object Dependencies {

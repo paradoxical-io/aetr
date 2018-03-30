@@ -5,6 +5,7 @@ import com.twitter.finatra.http.EmbeddedHttpServer
 import com.twitter.inject.server.FeatureTest
 import io.paradoxical.aetr.core.server.AetrServer
 import io.paradoxical.aetr.core.server.modules.Modules
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ServiceTests extends FeatureTest {
 

@@ -1,6 +1,11 @@
 package io.paradoxical.aetr
 
-import org.scalatest.{FlatSpec, Matchers}
+import io.paradoxical.aetr.db.Postgres
 
-class DbTests extends FlatSpec with Matchers {
+class DbTests extends TestBase {
+  val docker = Postgres.docker()
+
+  override protected def afterAll(): Unit = {
+    docker.close()
+  }
 }

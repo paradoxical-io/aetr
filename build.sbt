@@ -38,7 +38,11 @@ lazy val core = project.settings(commonSettings).settings(
       "io.paradoxical" %% "finatra-swagger" % versions.paradox.finatra,
       "io.paradoxical" %% "tasks" % versions.paradox.tasks,
       "net.codingwell" %% "scala-guice" % versions.scalaGuice,
+      "org.postgresql" % "postgresql" % versions.postgres,
+      "org.slf4j" % "jul-to-slf4j" % "1.7.25",
+      "org.slf4j" % "jcl-over-slf4j" % "1.7.25",
       "ch.qos.logback" % "logback-classic" % versions.logback % "test",
+      "io.paradoxical" % "docker-client" % versions.paradox.docker % "test",
       "com.google.inject.extensions" % "guice-testlib" % versions.guice % "test",
       "io.paradoxical" %% "finatra-test" % versions.paradox.finatra % "test"
     ) ++ Dependencies.testDeps
