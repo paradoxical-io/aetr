@@ -29,7 +29,7 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
 
     // if by the time this line runs its already complete, dont set it to executing
     // if we fail here we will end up retrying the execution
-    storage.trySetRunState(actionable.run.id, StepState.Executing)
+    storage.trySetRunState(actionable.run.id, RunState.Executing)
   }
 
   private def createRunToken(run: Run): RunToken = {

@@ -35,7 +35,7 @@ class TreeManager(root: StepTree) {
 
   def newRun(): Run = {
     val r = model.Run(
-      rootId,
+      RunInstanceId(rootId.value),
       getChildren(root),
       rootId,
       root

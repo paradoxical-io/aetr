@@ -19,7 +19,7 @@ trait Storage {
    * @param runId
    * @param stepState
    */
-  def trySetRunState(runId: RunId, stepState: StepState): Unit
+  def trySetRunState(runId: RunId, stepState: RunState): Unit
 
   /**
    * Atomically update a run
@@ -45,7 +45,7 @@ trait Storage {
    * @param state
    * @return
    */
-  def findRuns(state: StepState): List[Run]
+  def findRuns(state: RunState): List[Run]
 
   /**
    * Acquire runs for processing

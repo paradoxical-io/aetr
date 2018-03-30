@@ -4,7 +4,7 @@ import io.exceptions.MaxRetriesAttempted
 import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.graph.RunManager
-import io.paradoxical.aetr.core.model.{ResultData, StepState}
+import io.paradoxical.aetr.core.model.{ResultData, RunState}
 import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.util.{Failure, Success}
@@ -40,7 +40,7 @@ class Completor @Inject()(
         case Success(value) =>
           logger.info(s"Upserted root ${root.id}")
 
-          if(manager.state != StepState.Complete) {
+          if(manager.state != RunState.Complete) {
             advancer.advance(root.root)
           }
       }
