@@ -11,13 +11,13 @@ class StepDb @Inject()(
   dataMappers: DataMappers,
   steps: Steps,
   children: StepChildren,
-  converters: Converters
+  composer: StepTreeComposer
 )(implicit executionContext: ExecutionContext) {
 
   import dataMappers._
   import provider.driver.api._
 
-  def resolveSteps(stepTreeId: StepTreeId): Future[StepTree] = {
+  def getTree(stepTreeId: StepTreeId): Future[StepTree] = {
     val idQuery = sql"""
                      with recursive getChild(kids) as (
                        select ${stepTreeId}
@@ -37,9 +37,27 @@ class StepDb @Inject()(
 
     provider.withDB(nodesQuery.withPinnedSession).map {
       case (ids, nodes) =>
-        val allSteps = converters.resolveSteps(nodes, ids)
+        val allSteps = composer.reconstitute(nodes, ids)
 
         allSteps.find(_.id == stepTreeId).get
+    }
+  }
+
+  def upsertStep(stepTree: StepTree): Future[Unit] = {
+    val decomposer = new StepTreeDecomposer(stepTree)
+
+    val insertDaos = DBIO.sequence(decomposer.dao.map(steps.query.insertOrUpdate))
+
+    val deleteExistingChildren = children.query.filter(_.id inSet decomposer.dao.map(_.id)).delete
+
+    val reInsertNewChildren = children.query.forceInsertAll(decomposer.children)
+
+    provider.withDB {
+      DBIO.seq(
+        insertDaos,
+        deleteExistingChildren,
+        reInsertNewChildren
+      ).transactionally
     }
   }
 }

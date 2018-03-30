@@ -1,4 +1,4 @@
-package com.example
+package io.paradoxical.aetr
 
 import io.paradoxical.aetr.core.graph.{RunManager, TreeManager}
 import io.paradoxical.aetr.core.model._

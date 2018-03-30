@@ -13,8 +13,8 @@ case class StepTreeDao(
   stepType: StepType,
   root: Option[StepTreeId],
   execution: Option[Execution],
-  createdAt: Instant,
-  lastUpdatedAt: Instant
+  createdAt: Instant = Instant.now(),
+  lastUpdatedAt: Instant = Instant.now()
 )
 
 class Steps @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extends SlickDAO {
