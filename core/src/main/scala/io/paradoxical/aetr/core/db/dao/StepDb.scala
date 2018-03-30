@@ -108,17 +108,17 @@ class StepDb @Inject()(
   private def upsertIfVersion(dao: RunDao): DBIO[Int] = {
     for {
       existing <- runs.query.filter(_.id === dao.id).result.headOption
-      row = {
-        if (existing.isEmpty) {
-          dao.copy(version = dao.version.inc())
-        } else if (existing.isDefined && existing.exists(_.version.value == dao.version.value)) {
-          dao.copy(version = dao.version.inc())
-        } else {
-          throw VersionMismatchError()
-        }
+      next = dao.copy(version = dao.version.inc())
+      result <- if(existing.isDefined) {
+        runs.query.filter(r => r.id === next.id && r.version === dao.version).update(next)
+      } else {
+        (runs.query += next) andThen DBIO.successful(1)
       }
-      result <- runs.query.insertOrUpdate(row)
     } yield {
+      if(result == 0) {
+        throw VersionMismatchError()
+      }
+
       result
     }
   }
