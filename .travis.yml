@@ -3,6 +3,9 @@ scala:
   - 2.12.4
 jdk:
   - oraclejdk8
+sudo: required
+services:
+  - docker
 script: travis_retry sbt ++$TRAVIS_SCALA_VERSION clean test
 cache:
   directories:

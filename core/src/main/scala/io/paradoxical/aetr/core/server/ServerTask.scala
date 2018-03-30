@@ -2,6 +2,7 @@ package io.paradoxical.aetr.core.server
 
 import io.paradoxical.aetr.core.server.modules.Modules
 import io.paradoxical.tasks.{Task, TaskDefinition}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ServerTask extends Task {
   override type Config = Unit
