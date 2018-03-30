@@ -75,7 +75,7 @@ class StepDb @Inject()(
   }
 
   def getRun(rootId: Root): Future[Run] = {
-    val relatedToRoot = runs.query.filter(_.root === rootId).result
+    val relatedToRoot = runs.query.filter(_.root === RunInstanceId(rootId.value)).result
 
     provider.withDB {
       relatedToRoot
@@ -103,6 +103,14 @@ class StepDb @Inject()(
     )
 
     provider.withDB(update).map(updated => updated == 1)
+  }
+
+  def getPendingRuns(): Future[List[Run]] = {
+    val pendingRoots = runs.query.filter(r => r.state === RunState.Pending && (r.id === r.root)).result
+
+    provider.withDB(pendingRoots).flatMap(roots => {
+      Future.sequence(roots.map(r => getRun(Root(r.id.value)))).map(_.toList)
+    })
   }
 
   private def upsertIfVersion(dao: RunDao): DBIO[Int] = {

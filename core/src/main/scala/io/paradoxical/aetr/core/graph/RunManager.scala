@@ -31,6 +31,10 @@ class RunManager(val root: Run) {
     find0(root)
   }
 
+  def completeAll(result: Option[ResultData] = None): Unit = {
+    complete(root, result)
+  }
+
   def complete(run: Run, result: Option[ResultData] = None): Unit = {
     run.state = RunState.Complete
 

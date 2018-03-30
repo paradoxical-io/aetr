@@ -20,7 +20,7 @@ class RunDaoManager @Inject()() {
         val item = Run(
           id = r.id,
           children = runData.filter(_.parent.exists(_ == r.id)).map(resolve),
-          root = rootId,
+          rootId = rootId,
           version = r.version,
           state = r.state,
           result = r.result,
@@ -57,7 +57,7 @@ class RunDaoManager @Inject()() {
     flattened.map(r => {
       RunDao(
         id = RunInstanceId(r.id.value),
-        root = r.root,
+        root = RunInstanceId(r.rootId.value),
         parent = r.parent.map(p => RunInstanceId(p.id.value)),
         version = r.version,
         stepTreeId = r.repr.id,

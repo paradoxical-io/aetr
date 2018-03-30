@@ -41,7 +41,7 @@ class Completor @Inject()(
           logger.info(s"Upserted root ${root.id}")
 
           if(manager.state != RunState.Complete) {
-            advancer.advance(root.root)
+            advancer.advance(root.rootId)
           }
       }
     }

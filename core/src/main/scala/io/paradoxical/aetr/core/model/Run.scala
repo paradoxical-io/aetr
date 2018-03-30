@@ -7,7 +7,7 @@ import java.util.UUID
 case class Run(
   id: RunInstanceId,
   var children: Seq[Run],
-  root: Root,
+  rootId: Root,
   repr: StepTree,
   version: Version = Version(1),
   createdAt: Instant = Instant.now(),

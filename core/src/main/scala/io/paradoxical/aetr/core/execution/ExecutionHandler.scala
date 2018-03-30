@@ -33,7 +33,7 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
   }
 
   private def createRunToken(run: Run): RunToken = {
-    RunToken(run.id, run.root)
+    RunToken(run.id, run.rootId)
   }
 }
 

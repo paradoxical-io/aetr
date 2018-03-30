@@ -9,7 +9,7 @@ import slick.jdbc.JdbcProfile
 
 case class RunDao(
   id: RunInstanceId,
-  root: Root,
+  root: RunInstanceId,
   parent: Option[RunInstanceId],
   version: Version,
   stepTreeId: StepTreeId,
@@ -31,7 +31,7 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
   class RunTable(tag: Tag) extends DAOTable(tag, "runs") {
     def id = column[RunInstanceId]("id", O.PrimaryKey)
 
-    def root = column[Root]("root_id")
+    def root = column[RunInstanceId]("root_id")
 
     def parentId = column[Option[RunInstanceId]]("parent_id")
 
