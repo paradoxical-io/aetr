@@ -16,4 +16,3 @@ case class RunDao(
   lastUpdatedAt: Instant,
   stateUpdatedAt: Instant
 )
-
