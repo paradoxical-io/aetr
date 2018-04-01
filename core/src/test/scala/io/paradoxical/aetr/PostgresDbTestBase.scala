@@ -1,15 +1,19 @@
 package io.paradoxical.aetr
 
+import com.google.inject.Guice
 import com.twitter.util.CountDownLatch
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.db.dao.{StepDb, VersionMismatchError}
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.aetr.db.PostgresDbTestBase
+import io.paradoxical.aetr.core.server.modules.ClockModule
+import io.paradoxical.aetr.db.{DbInitializer, PostgresDbTestBase, TestModules}
+import io.paradoxical.aetr.mocks.TickClock
 import io.paradoxical.common.extensions.Extensions._
 import net.codingwell.scalaguice.InjectorExtensions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class DbTests extends PostgresDbTestBase {
   "DB" should "insert and update" in withDb { injector =>
@@ -238,5 +242,61 @@ class DbTests extends PostgresDbTestBase {
     // the thread tried to acquire a lock but was unable to
     // since the local thread was in the lock
     assert(!threadSet)
+  }
+
+  it should "expire locked rows" in {
+    import TestModules._
+
+    val testDbConfig = newDbAndConfig
+
+    val fakeClock = new TickClock
+
+    val modules = TestModules(testDbConfig).overlay(new ClockModule(fakeClock))
+
+    val injector = Guice.createInjector(modules: _*)
+
+    val leaf1: Action = Action(name = NodeName("leaf1"))
+
+    injector.instance[DbInitializer].init()
+
+    val db = injector.instance[Storage]
+
+    db.upsertSteps(leaf1)
+
+    val run = new RunManager(leaf1).root
+
+    assert(db.tryUpsertRun(run).isSuccess)
+
+    def lock(action: => Unit): Boolean = {
+      db.tryLock(run.rootId)(r => {
+        action
+
+        true
+      }).getOrElse(false)
+    }
+
+    assertThrows[Exception] {
+      lock {
+        throw new RuntimeException("Lock failed and was unset")
+      }
+    }
+
+    // lock should be held still since it was not properly unlocked
+    assert(!lock {})
+
+    // move the clock fowrard but not enough to expire yet
+    fakeClock.tick(testDbConfig.dbLockTime.minus(10 seconds))
+
+    // lock should be held still since lock isn't expired
+    assert(!lock {})
+
+    // move the clock past the expiration date
+    fakeClock.tick(testDbConfig.dbLockTime.plus(10 seconds))
+
+    // lock should now be expired and so the lock can be acquired
+    assert(lock {})
+
+    // the lock was properly closed in the last run so new locks can be acquired
+    assert(lock {})
   }
 }

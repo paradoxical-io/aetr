@@ -65,7 +65,7 @@ class RunDaoManager @Inject()() {
         result = r.result,
         createdAt = r.createdAt,
         lastUpdatedAt = now,
-        stateUpdatedAt = now,
+        stateUpdatedAt = now
       )
     })
   }

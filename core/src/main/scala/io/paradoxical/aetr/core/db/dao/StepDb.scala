@@ -4,13 +4,14 @@ import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.db.dao.tables._
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.rdb.slick.providers.SlickDBProvider
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant}
 import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class StepDb @Inject()(
+  clock: Clock,
   provider: SlickDBProvider,
   dataMappers: DataMappers,
   config: ServiceConfig,
@@ -120,7 +121,7 @@ class StepDb @Inject()(
     state: RunState,
     result: Option[ResultData]
   ): Future[Boolean] = {
-    val now = Instant.now()
+    val now = Instant.now(clock)
 
     val update = runs.updateWhere(
       r => r.id === id && r.version === version,
@@ -149,7 +150,7 @@ class StepDb @Inject()(
    * @return
    */
   def lock[T](rootId: RootId)(block: Run => T): Future[Option[T]] = {
-    val now = Instant.now()
+    val now = Instant.now(clock)
 
     val newLockId = LockId(UUID.randomUUID())
 
