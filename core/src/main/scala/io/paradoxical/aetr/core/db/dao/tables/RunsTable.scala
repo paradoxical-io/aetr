@@ -2,10 +2,14 @@ package io.paradoxical.aetr.core.db.dao.tables
 
 import io.paradoxical.aetr.core.db.dao.DataMappers
 import io.paradoxical.aetr.core.model._
+import io.paradoxical.global.tiny.UuidValue
 import io.paradoxical.rdb.slick.dao.SlickDAO
 import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 import slick.jdbc.JdbcProfile
+
+case class LockId(value: UUID) extends UuidValue
 
 case class RunDao(
   id: RunInstanceId,
@@ -17,7 +21,9 @@ case class RunDao(
   result: Option[ResultData],
   createdAt: Instant,
   lastUpdatedAt: Instant,
-  stateUpdatedAt: Instant
+  stateUpdatedAt: Instant,
+  actionLockedTill: Option[Instant] = None,
+  lockId: Option[LockId] = None
 )
 
 class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extends SlickDAO {
@@ -49,6 +55,10 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
 
     def stateUpdatedAt = column[Instant]("state_updated_at")
 
+    def actionLockedTill = column[Option[Instant]]("action_locked_till")
+
+    def lockId = column[Option[LockId]]("lock_id")
+
     override def * =
       (
         id,
@@ -60,7 +70,9 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
         result,
         createdAt,
         lastUpdatedAt,
-        stateUpdatedAt
+        stateUpdatedAt,
+        actionLockedTill,
+        lockId
       ) <> (RunDao.tupled, RunDao.unapply)
   }
 

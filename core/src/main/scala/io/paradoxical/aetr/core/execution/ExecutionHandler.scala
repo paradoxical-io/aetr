@@ -5,7 +5,7 @@ import io.paradoxical.aetr.core.model._
 import java.net.URL
 import javax.inject.Inject
 
-case class RunToken(runId: RunId, rootId: Root)
+case class RunToken(runId: RunId, rootId: RootId)
 
 trait UrlExecutor {
   // POST url?aetr=runToken <data>
@@ -24,12 +24,12 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
       case ApiExecution(url) =>
         urlExecutor.execute(runToken, url, actionable.previousResult)
       case NoOp() =>
-      // TODO:set this to complete
+        storage.trySetRunState(actionable.run.id, actionable.run.version, RunState.Complete)
     }
 
     // if by the time this line runs its already complete, dont set it to executing
     // if we fail here we will end up retrying the execution
-    storage.trySetRunState(actionable.run.id, RunState.Executing)
+    storage.trySetRunState(actionable.run.id, actionable.run.version, RunState.Executing)
   }
 
   private def createRunToken(run: Run): RunToken = {

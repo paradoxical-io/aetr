@@ -1,15 +1,19 @@
 package io.paradoxical.aetr.core.db.dao
 
+import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.db.dao.tables._
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.rdb.slick.providers.SlickDBProvider
 import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class StepDb @Inject()(
   provider: SlickDBProvider,
   dataMappers: DataMappers,
+  config: ServiceConfig,
   steps: Steps,
   runs: Runs,
   children: StepChildren,
@@ -20,7 +24,7 @@ class StepDb @Inject()(
   import dataMappers._
   import provider.driver.api._
 
-  def getTree(stepTreeId: StepTreeId): Future[StepTree] = {
+  def getStep(stepTreeId: StepTreeId): Future[StepTree] = {
     val idQuery = sql"""
                      WITH RECURSIVE getChild(kids) AS (
                        SELECT ${stepTreeId}
@@ -43,6 +47,21 @@ class StepDb @Inject()(
         val allSteps = composer.reconstitute(nodes, children)
 
         allSteps.find(_.id == stepTreeId).get
+    }
+  }
+
+  def deleteStep(stepTree: StepTree): Future[Unit] = {
+    val decomposer = new StepTreeDecomposer(stepTree)
+
+    val deleteExistingChildren = children.query.filter(_.id inSet decomposer.dao.map(_.id)).delete
+
+    val deleteTrees = children.query.filter(_.id inSet decomposer.dao.map(_.id)).delete
+
+    provider.withDB {
+      DBIO.seq(
+        deleteExistingChildren,
+        deleteTrees
+      ).transactionally
     }
   }
 
@@ -74,17 +93,24 @@ class StepDb @Inject()(
     }.map(_ => {})
   }
 
-  def getRun(rootId: Root): Future[Run] = {
+  def getRun(rootId: RootId): Future[Run] = {
     val relatedToRoot = runs.query.filter(_.root === RunInstanceId(rootId.value)).result
 
-    provider.withDB {
-      relatedToRoot
-    }.flatMap(data => {
-      val root = data.find(_.id.value == rootId.value).get
+    provider.withDB(relatedToRoot).flatMap(resolveRunFromTreeNodes(rootId, _))
+  }
 
-      getTree(root.stepTreeId).map(tree => {
-        runDaoManager.reconstitute(rootId, data, tree)
-      })
+  /**
+   * Given a query to find the related run items for a tree,
+   * execute the query and resolve the final run tree
+   *
+   * @param rootId
+   * @return
+   */
+  private def resolveRunFromTreeNodes(rootId: RootId, data: Seq[RunDao]): Future[Run] = {
+    val root = data.find(_.id.value == rootId.value).get
+
+    getStep(root.stepTreeId).map(tree => {
+      runDaoManager.reconstitute(rootId, data, tree)
     })
   }
 
@@ -105,11 +131,65 @@ class StepDb @Inject()(
     provider.withDB(update).map(updated => updated == 1)
   }
 
-  def getPendingRuns(): Future[List[Run]] = {
-    val pendingRoots = runs.query.filter(r => r.state === RunState.Pending && (r.id === r.root)).result
+  def findRuns(state: RunState): Future[List[RootId]] = {
+    val pendingRoots = runs.query.filter(r => r.state === state && (r.id === r.root)).result
 
-    provider.withDB(pendingRoots).flatMap(roots => {
-      Future.sequence(roots.map(r => getRun(Root(r.id.value)))).map(_.toList)
+    provider.withDB(pendingRoots).map(roots => {
+      roots.map(r => RootId(r.id.value)).toList
+    })
+  }
+
+  /**
+   * Locks all nodes in a tree for update
+   * executes the block, then returns a result
+   *
+   * @param rootId
+   * @param block
+   * @tparam T
+   * @return
+   */
+  def lock[T](rootId: RootId)(block: Run => T): Future[Option[T]] = {
+    val now = Instant.now()
+
+    val newLockId = LockId(UUID.randomUUID())
+
+    val lockExpirationTime = now.plus(config.dbLockTime.toSeconds, ChronoUnit.SECONDS)
+
+    // if nobody's ever locked it,
+    // or the lock is expired (it was set to expire and it is currently later than that)
+    // then acquire a lock
+    val lockQuery = runs.query.
+      filter(r =>
+        r.root === rootId.asRunInstance &&
+        r.actionLockedTill.isEmpty || r.actionLockedTill <= now
+      ).
+      map(r => (r.actionLockedTill, r.lockId)).
+      update((Some(lockExpirationTime), Some(newLockId)))
+
+    // unlock the instance and the lock key is the
+    // time we expected to lock till
+    val unlockQuery = runs.query.
+      filter(r =>
+        r.root === rootId.asRunInstance &&
+        r.lockId === newLockId
+      ).
+      map(r => (r.actionLockedTill, r.lockId)).
+      update((None, None))
+
+    provider.withDB(lockQuery).flatMap(results => {
+      // if the lock was acquired, resolve the tree
+      // and allow someone to do work with it
+      // and attempt a safe unlock
+      if (results > 0) {
+        for {
+          data <- getRun(rootId).map(block).map(Some(_))
+          _ <- provider.withDB(unlockQuery)
+        } yield {
+          data
+        }
+      } else {
+        Future.successful(None)
+      }
     })
   }
 
@@ -117,13 +197,13 @@ class StepDb @Inject()(
     for {
       existing <- runs.query.filter(_.id === dao.id).result.headOption
       next = dao.copy(version = dao.version.inc())
-      result <- if(existing.isDefined) {
+      result <- if (existing.isDefined) {
         runs.query.filter(r => r.id === next.id && r.version === dao.version).update(next)
       } else {
         (runs.query += next) andThen DBIO.successful(1)
       }
     } yield {
-      if(result == 0) {
+      if (result == 0) {
         throw VersionMismatchError()
       }
 

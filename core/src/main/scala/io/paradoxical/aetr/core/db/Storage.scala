@@ -1,25 +1,38 @@
 package io.paradoxical.aetr.core.db
 
+import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.global.tiny.UuidValue
-import java.util.UUID
+import io.paradoxical.common.extensions.Extensions._
+import javax.inject.Inject
 import scala.util.Try
 
-trait Storage {
-  def upsertSteps(stepTree: StepTree): Unit
+class Storage @Inject()(stepDb: StepDb) {
+  def upsertSteps(stepTree: StepTree): Unit = {
+    stepDb.upsertStep(stepTree).waitForResult()
+  }
 
-  def deleteSteps(stepTree: StepTree): Unit
+  def deleteSteps(stepTree: StepTree): Unit = {
+    stepDb.deleteStep(stepTree).waitForResult()
+  }
 
-  def getSteps(stepTreeId: StepTreeId): StepTree
+  def getSteps(stepTreeId: StepTreeId): StepTree = {
+    stepDb.getStep(stepTreeId).waitForResult()
+  }
 
   /**
-   * Sets the state of a run id IF its allowed to move to that state
-   * For example, we dont want to move a state to Executing if its already marked as Complete
+   * Try an atomic lock on the id. This doesn't prevent updates
+   * or other actions, it only prevents others using the lock mechanism
+   * from acting while an id is locked.  This can be used
+   * to prevent concurrent processing on an id
    *
-   * @param runId
-   * @param stepState
+   * @param rootId
+   * @param run
+   * @tparam T
+   * @return
    */
-  def trySetRunState(runId: RunId, stepState: RunState): Unit
+  def tryLock[T](rootId: RootId)(run: Run => T): Option[T] = {
+    stepDb.lock(rootId)(run).waitForResult()
+  }
 
   /**
    * Atomically update a run
@@ -27,9 +40,18 @@ trait Storage {
    * @param run
    * @return
    */
-  def tryUpsertRun(run: Run): Try[Unit]
+  def tryUpsertRun(run: Run): Try[Unit] = {
+    Try(stepDb.upsertRun(run).waitForResult())
+  }
 
-  def deleteRun(run: Run): Unit
+  def trySetRunState(
+    id: RunInstanceId,
+    version: Version,
+    state: RunState,
+    result: Option[ResultData] = None
+  ): Boolean = {
+    stepDb.setRunState(id, version, state, result).waitForResult()
+  }
 
   /**
    * Given a root id, load a run tree
@@ -37,7 +59,9 @@ trait Storage {
    * @param root
    * @return
    */
-  def loadRun(root: Root): Run
+  def loadRun(root: RootId): Run = {
+    stepDb.getRun(root).waitForResult()
+  }
 
   /**
    * Find runs in the current state (from the root)
@@ -45,34 +69,7 @@ trait Storage {
    * @param state
    * @return
    */
-  def findRuns(state: RunState): List[Run]
-
-  /**
-   * Acquire runs for processing
-   *
-   * This should find runs that are in a Pending state
-   * and mark a TTL for work
-   *
-   * @return
-   */
-  def tryAcquire(run: Run): Option[AcquisitionLock[Run]]
-
-  /**
-   * Release the lock
-   *
-   * @param id
-   */
-  def releaseRun(id: AcquisitionLockId): Unit
-
-  /**
-   * Find runs related to a step tree
-   *
-   * @param stepTreeId
-   * @return
-   */
-  def listRunsRelated(stepTreeId: StepTreeId): List[Run]
+  def findRuns(state: RunState): List[RootId] = {
+    stepDb.findRuns(state).waitForResult()
+  }
 }
-
-case class AcquisitionLockId(value: UUID) extends UuidValue
-
-case class AcquisitionLock[T](id: AcquisitionLockId, data: T)

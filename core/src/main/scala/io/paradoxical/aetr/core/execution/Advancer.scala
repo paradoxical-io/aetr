@@ -2,7 +2,7 @@ package io.paradoxical.aetr.core.execution
 
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.graph.RunManager
-import io.paradoxical.aetr.core.model.{Root, Run, RunState}
+import io.paradoxical.aetr.core.model.{RootId, Run, RunState}
 import javax.inject.Inject
 
 class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
@@ -11,16 +11,14 @@ class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
   def advanceAll(): Unit = {
     val pendingRuns = storage.findRuns(RunState.Pending)
 
-    pendingRuns.foreach(run => {
-      storage.tryAcquire(run).foreach(lock => {
-        dispatch(lock.data)
-
-        storage.releaseRun(lock.id)
-      })
-    })
+    pendingRuns.foreach(runId => storage.tryLock(runId)(run => {
+      if(run.state == RunState.Pending) {
+        dispatch(run)
+      }
+    }))
   }
 
-  def advance(root: Root): Unit = {
+  def advance(root: RootId): Unit = {
     logger.info(s"Advancing root $root")
 
     dispatch(storage.loadRun(root))

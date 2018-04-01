@@ -8,7 +8,7 @@ import javax.inject.Inject
 import scala.collection.mutable
 
 class RunDaoManager @Inject()() {
-  def reconstitute(rootId: Root, runData: Seq[RunDao], tree: StepTree): Run = {
+  def reconstitute(rootId: RootId, runData: Seq[RunDao], tree: StepTree): Run = {
     val steps: Map[StepTreeId, StepTree] = new TreeManager(tree).flatten.groupBy(_.id).mapValues(_.head)
 
     val cache = new mutable.HashMap[RunInstanceId, Run]()
@@ -65,7 +65,7 @@ class RunDaoManager @Inject()() {
         result = r.result,
         createdAt = r.createdAt,
         lastUpdatedAt = now,
-        stateUpdatedAt = now
+        stateUpdatedAt = now,
       )
     })
   }

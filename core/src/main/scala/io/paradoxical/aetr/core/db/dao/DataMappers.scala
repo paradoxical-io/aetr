@@ -1,5 +1,6 @@
 package io.paradoxical.aetr.core.db.dao
 
+import io.paradoxical.aetr.core.db.dao.tables.LockId
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.jackson.JacksonSerializer
 import io.paradoxical.rdb.slick.dao.SlickDAO
@@ -35,8 +36,12 @@ class DataMappers @Inject()(
     MappedColumnType.base[RunInstanceId, String](_.value.toString, s => RunInstanceId(UUID.fromString(s)))
   }
 
-  implicit val rootIdMapper: JdbcType[Root] with BaseTypedType[Root] = {
-    MappedColumnType.base[Root, String](_.value.toString, s => Root(UUID.fromString(s)))
+  implicit val lockIdMapper: JdbcType[LockId] with BaseTypedType[LockId] = {
+    MappedColumnType.base[LockId, String](_.value.toString, s => LockId(UUID.fromString(s)))
+  }
+
+  implicit val rootIdMapper: JdbcType[RootId] with BaseTypedType[RootId] = {
+    MappedColumnType.base[RootId, String](_.value.toString, s => RootId(UUID.fromString(s)))
   }
 
   implicit val resultDataMapper: JdbcType[ResultData] with BaseTypedType[ResultData] = {
