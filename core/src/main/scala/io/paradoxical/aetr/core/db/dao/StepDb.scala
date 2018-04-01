@@ -21,6 +21,7 @@ class StepDb @Inject()(
   composer: StepTreeComposer,
   runDaoManager: RunDaoManager
 )(implicit executionContext: ExecutionContext) {
+  protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   import dataMappers._
   import provider.driver.api._
@@ -141,8 +142,8 @@ class StepDb @Inject()(
   }
 
   /**
-   * Locks all nodes in a tree for update
-   * executes the block, then returns a result
+   * Locks all nodes in a tree via an optimistic lock on the tree nodes
+   * if the lock is acquired, the action is run, then the lock is released
    *
    * @param rootId
    * @param block
@@ -156,12 +157,18 @@ class StepDb @Inject()(
 
     val lockExpirationTime = now.plus(config.dbLockTime.toSeconds, ChronoUnit.SECONDS)
 
+    // NOTE: Only locking on the root id, since you can't lock on sub nodes anyways
+    // this means that the remaining tree will look "unlocked" from a db perspective
+    // but it also means we dont have to update N nodes, we only have to update 1.
+    //
+    // Flow is:
     // if nobody's ever locked it,
     // or the lock is expired (it was set to expire and it is currently later than that)
     // then acquire a lock
+
     val lockQuery = runs.query.
       filter(r =>
-        r.root === rootId.asRunInstance &&
+        r.id === rootId.asRunInstance &&
         r.actionLockedTill.isEmpty || r.actionLockedTill <= now
       ).
       map(r => (r.actionLockedTill, r.lockId)).
@@ -171,7 +178,7 @@ class StepDb @Inject()(
     // time we expected to lock till
     val unlockQuery = runs.query.
       filter(r =>
-        r.root === rootId.asRunInstance &&
+        r.id === rootId.asRunInstance &&
         r.lockId === newLockId
       ).
       map(r => (r.actionLockedTill, r.lockId)).
@@ -182,13 +189,18 @@ class StepDb @Inject()(
       // and allow someone to do work with it
       // and attempt a safe unlock
       if (results > 0) {
+        logger.debug(s"Acquired lock $newLockId to expire on $lockExpirationTime")
+
         for {
           data <- getRun(rootId).map(block).map(Some(_))
           _ <- provider.withDB(unlockQuery)
         } yield {
+          logger.debug(s"Unlocked lock $newLockId")
+
           data
         }
       } else {
+        logger.debug(s"Lock $newLockId is acquired, cannot execute action")
         Future.successful(None)
       }
     })
