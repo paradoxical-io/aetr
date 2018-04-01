@@ -51,8 +51,8 @@ class DataMappers @Inject()(
     MappedColumnType.base[Execution, String](objectMapper.toJson, objectMapper.fromJson[Execution])
   }
 
-  implicit val stepStateMapper: JdbcType[StepState] with BaseTypedType[StepState] = {
-    MappedColumnType.base[StepState, String](_.toString, StepState.valueOf)
+  implicit val stepStateMapper: JdbcType[RunState] with BaseTypedType[RunState] = {
+    MappedColumnType.base[RunState, String](_.toString, RunState.valueOf)
   }
 
   implicit val stepTypeMapper: JdbcType[StepType] with BaseTypedType[StepType] = {

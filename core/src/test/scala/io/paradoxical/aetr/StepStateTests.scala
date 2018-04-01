@@ -40,15 +40,15 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       val nextActions = m.next()
 
       if (nextActions.isEmpty) {
-        assert(m.root.state == StepState.Complete)
+        assert(m.root.state == RunState.Complete)
       }
 
       assert(nextActions.map(_.action) == action.toList)
 
       nextActions.map(_.run).foreach(a => {
-        m.setState(a.id, StepState.Executing)
+        m.setState(a.id, RunState.Executing)
 
-        assert(m.root.state == StepState.Executing)
+        assert(m.root.state == RunState.Executing)
       })
 
       nextActions.map(_.run).foreach(m.complete(_))
@@ -69,11 +69,11 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       all.find(_.repr.id == stepTreeId).get
     }
 
-    def advance(state: StepState, action: Action*) = {
+    def advance(state: RunState, action: Action*) = {
       val nextActions = m.next()
 
       if (nextActions.isEmpty) {
-        assert(m.root.state == StepState.Complete)
+        assert(m.root.state == RunState.Complete)
       }
 
       assert(nextActions.map(_.action) == action.toList)
@@ -87,19 +87,19 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       nextActions.map(_.run).foreach(m.complete(_))
     }
 
-    advance(StepState.Executing, action1)
-    advance(StepState.Executing, action2)
-    advance(StepState.Executing, action3, action4)
+    advance(RunState.Executing, action1)
+    advance(RunState.Executing, action2)
+    advance(RunState.Executing, action3, action4)
 
-    m.setState(findByStep(action3.id).id, StepState.Error)
+    m.setState(findByStep(action3.id).id, RunState.Error)
 
-    assert(m.root.state == StepState.Error)
+    assert(m.root.state == RunState.Error)
 
-    m.setState(findByStep(action3.id).id, StepState.Pending)
+    m.setState(findByStep(action3.id).id, RunState.Pending)
 
-    advance(StepState.Executing, action3)
+    advance(RunState.Executing, action3)
 
-    advance(StepState.Complete)
+    advance(RunState.Complete)
   }
 
   it should "find a node" in new ActionList {

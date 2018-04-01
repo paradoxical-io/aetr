@@ -31,15 +31,19 @@ class RunManager(val root: Run) {
     find0(root)
   }
 
+  def completeAll(result: Option[ResultData] = None): Unit = {
+    complete(root, result)
+  }
+
   def complete(run: Run, result: Option[ResultData] = None): Unit = {
-    run.state = StepState.Complete
+    run.state = RunState.Complete
 
     run.result = result
 
     run.parent.foreach(sync)
   }
 
-  def state: StepState = {
+  def state: RunState = {
     determineState(root)
   }
 
@@ -51,7 +55,7 @@ class RunManager(val root: Run) {
     run.parent.foreach(sync)
   }
 
-  def setState(run: RunId, state: StepState): Unit = {
+  def setState(run: RunId, state: RunState): Unit = {
     find(run).foreach(r => {
       r.state = state
 
@@ -59,18 +63,18 @@ class RunManager(val root: Run) {
     })
   }
 
-  private def determineState(run: Run): StepState = {
+  private def determineState(run: Run): RunState = {
     if (run.children.isEmpty) {
       run.state
     } else {
-      if (run.children.forall(_.state == StepState.Complete)) {
-        StepState.Complete
-      } else if (run.children.exists(_.state == StepState.Error)) {
-        StepState.Error
-      } else if (run.children.exists(_.state == StepState.Executing)) {
-        StepState.Executing
+      if (run.children.forall(_.state == RunState.Complete)) {
+        RunState.Complete
+      } else if (run.children.exists(_.state == RunState.Error)) {
+        RunState.Error
+      } else if (run.children.exists(_.state == RunState.Executing)) {
+        RunState.Executing
       } else {
-        StepState.Pending
+        RunState.Pending
       }
     }
   }
@@ -81,7 +85,7 @@ class RunManager(val root: Run) {
     if (run.children.isEmpty) {
       run.result
     } else {
-      if (determineState(run) == StepState.Complete) {
+      if (determineState(run) == RunState.Complete) {
         run.repr match {
           case x: Parent =>
             x match {
@@ -110,14 +114,14 @@ class RunManager(val root: Run) {
         x match {
           case _: SequentialParent =>
             val previousResult =
-              if (run.children.forall(_.state == StepState.Pending)) {
+              if (run.children.forall(_.state == RunState.Pending)) {
                 // nobody has completed so if a special seed was sent, use that
                 data
               } else {
                 // find the last one who completed and take their result
                 // A matched child that maps its result applies its data mapper here.
                 // NOTE that mappers are not applied to root seed data
-                run.children.filter(_.state == StepState.Complete).lastOption.flatMap(run => {
+                run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
                   run.repr match {
                     case canMap: MapsResult => run.result.map(canMap.mapper.map)
                     case _ => run.result
@@ -125,12 +129,12 @@ class RunManager(val root: Run) {
                 })
               }
 
-            run.children.find(_.state == StepState.Pending).map(next(_, previousResult)).getOrElse(Nil)
+            run.children.find(_.state == RunState.Pending).map(next(_, previousResult)).getOrElse(Nil)
           case _: ParallelParent =>
             // all we can do is use the seed from whatever the last data was
-            run.children.filter(_.state == StepState.Pending).flatMap(next(_, data))
+            run.children.filter(_.state == RunState.Pending).flatMap(next(_, data))
         }
-      case x: Action if run.state == StepState.Pending =>
+      case x: Action if run.state == RunState.Pending =>
         List(Actionable(run, x, data))
     }
   }

@@ -1,6 +1,6 @@
 package io.paradoxical.aetr.core.model;
 
-public enum StepState {
+public enum RunState {
     Pending,
     Executing,
     Complete,
