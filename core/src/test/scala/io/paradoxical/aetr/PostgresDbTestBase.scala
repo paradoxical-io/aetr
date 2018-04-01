@@ -129,7 +129,7 @@ class DbTests extends PostgresDbTestBase {
     }
 
     def pending(): List[Run] = {
-      val runs = db.findRuns(RunState.Pending).flatMap(r => Future.sequence(r.map(db.getRun)))
+      val runs = db.findUnlockedRuns(RunState.Pending).flatMap(r => Future.sequence(r.map(db.getRun)))
 
       runs.waitForResult()
     }
@@ -275,28 +275,36 @@ class DbTests extends PostgresDbTestBase {
       }).getOrElse(false)
     }
 
+    assert(db.findUnlockedRuns(RunState.Pending).size == 1)
+
     assertThrows[Exception] {
       lock {
         throw new RuntimeException("Lock failed and was unset")
       }
     }
 
+    assert(db.findUnlockedRuns(RunState.Pending).size == 0)
+
     // lock should be held still since it was not properly unlocked
     assert(!lock {})
+    assert(db.findUnlockedRuns(RunState.Pending).size == 0)
 
     // move the clock fowrard but not enough to expire yet
     fakeClock.tick(testDbConfig.dbLockTime.minus(10 seconds))
 
     // lock should be held still since lock isn't expired
     assert(!lock {})
+    assert(db.findUnlockedRuns(RunState.Pending).size == 0)
 
     // move the clock past the expiration date
     fakeClock.tick(testDbConfig.dbLockTime.plus(10 seconds))
 
     // lock should now be expired and so the lock can be acquired
     assert(lock {})
+    assert(db.findUnlockedRuns(RunState.Pending).size == 1)
 
     // the lock was properly closed in the last run so new locks can be acquired
     assert(lock {})
+    assert(db.findUnlockedRuns(RunState.Pending).size == 1)
   }
 }

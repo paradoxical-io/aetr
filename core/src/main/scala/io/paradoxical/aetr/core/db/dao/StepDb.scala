@@ -133,8 +133,12 @@ class StepDb @Inject()(
     provider.withDB(update).map(updated => updated == 1)
   }
 
-  def findRuns(state: RunState): Future[List[RootId]] = {
-    val pendingRoots = runs.query.filter(r => r.state === state && (r.id === r.root)).result
+  def findUnlockedRuns(state: RunState): Future[List[RootId]] = {
+    val pendingRoots = runs.query.filter(r =>
+      r.state === state &&
+      r.id === r.root &&
+      (r.actionLockedTill.isEmpty || r.actionLockedTill <= Instant.now(clock))
+    ).result
 
     provider.withDB(pendingRoots).map(roots => {
       roots.map(r => RootId(r.id.value)).toList

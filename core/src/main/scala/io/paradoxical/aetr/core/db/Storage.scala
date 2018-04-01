@@ -69,7 +69,7 @@ class Storage @Inject()(stepDb: StepDb) {
    * @param state
    * @return
    */
-  def findRuns(state: RunState): List[RootId] = {
-    stepDb.findRuns(state).waitForResult()
+  def findUnlockedRuns(state: RunState): List[RootId] = {
+    stepDb.findUnlockedRuns(state).waitForResult()
   }
 }
