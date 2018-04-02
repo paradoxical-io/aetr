@@ -7,9 +7,9 @@ import io.paradoxical.aetr.core.db.PostgresDbProvider
 import io.paradoxical.aetr.core.execution.api.{UrlExecutor, UrlExecutorImpl}
 import io.paradoxical.finatra.modules.Defaults
 import io.paradoxical.jackson.JacksonSerializer
-import io.paradoxical.rdb.hikari.metrics.{DisabledMetricsTrackerFactory, LoggingMetricsTrackerFactory}
+import io.paradoxical.rdb.hikari.metrics.DisabledMetricsTrackerFactory
+import io.paradoxical.rdb.slick.providers.SlickDBProvider
 import io.paradoxical.rdb.slick.providers.custom.HikariSourceProvider
-import io.paradoxical.rdb.slick.providers.{DataSourceProviders, SlickDBProvider}
 import java.time.Clock
 import javax.inject.Singleton
 import javax.sql.DataSource
