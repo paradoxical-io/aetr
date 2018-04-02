@@ -1,10 +1,28 @@
 package io.paradoxical.aetr.core.server.controllers.conversion
 
+import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.aetr.core.server.controllers.StepDto
+import io.paradoxical.aetr.core.server.controllers.{StepsFatDto, StepsSlimDto}
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 
-class DtoConvertors {
-  def fromStep(stepTree: StepTree): StepDto = {
+object DtoConvertors {
+  implicit class RichStepsDto(fatDto: StepsFatDto) {
+    def toSlim: StepsSlimDto = {
+      StepsSlimDto(
+        id = fatDto.id,
+        name = fatDto.name,
+        root = fatDto.root,
+        action = fatDto.action,
+        children = fatDto.children.map(_.map(_.id)),
+        stepType = fatDto.stepType
+      )
+    }
+  }
+}
+
+class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: ExecutionContext) {
+  def fromStep(stepTree: StepTree): StepsFatDto = {
     val (action, children, typ) =
       stepTree match {
         case p: Parent =>
@@ -14,12 +32,12 @@ class DtoConvertors {
             case _: ParallelParent =>
               StepType.Parallel
           }
-          (None, p.children.map(fromStep), typ)
+          (None, Some(p.children.map(fromStep)), typ)
         case a: Action =>
-          (Some(a.execution), Nil, StepType.Action)
+          (Some(a.execution), None, StepType.Action)
       }
 
-    StepDto(
+    StepsFatDto(
       root = stepTree.root,
       id = stepTree.id,
       name = stepTree.name,
@@ -29,33 +47,35 @@ class DtoConvertors {
     )
   }
 
-  def toStep(stepDto: StepDto): StepTree = {
+  def toStep(stepDto: StepsSlimDto): Future[StepTree] = {
     stepDto.action match {
       case Some(execution) =>
-        Action(
+        Future.successful(Action(
           id = stepDto.id,
           name = stepDto.name,
           execution = execution,
           root = stepDto.root
-        )
+        ))
       case None =>
-        stepDto.stepType match {
-          case StepType.Sequential =>
-            SequentialParent(
-              id = stepDto.id,
-              name = stepDto.name,
-              root = stepDto.root,
-              children = stepDto.children.map(toStep)
-            )
-          case StepType.Parallel =>
-            ParallelParent(
-              id = stepDto.id,
-              name = stepDto.name,
-              root = stepDto.root,
-              children = stepDto.children.map(toStep)
-            )
-          case StepType.Action => ???
-        }
+        stepDb.getSteps(stepDto.children.getOrElse(Nil)).map(children => {
+          stepDto.stepType match {
+            case StepType.Sequential =>
+              SequentialParent(
+                id = stepDto.id,
+                name = stepDto.name,
+                root = stepDto.root,
+                children = children
+              )
+            case StepType.Parallel =>
+              ParallelParent(
+                id = stepDto.id,
+                name = stepDto.name,
+                root = stepDto.root,
+                children = children
+              )
+            case StepType.Action => ???
+          }
+        })
     }
   }
 }

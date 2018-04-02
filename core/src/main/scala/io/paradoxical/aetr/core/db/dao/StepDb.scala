@@ -26,6 +26,26 @@ class StepDb @Inject()(
   import dataMappers._
   import provider.driver.api._
 
+  def getRootSteps(): Future[Seq[StepTree]] = {
+    val rootsQ = steps.query.filter(s => s.id === s.root || s.root.isEmpty)
+
+    provider.withDB {
+      for {
+        rootItems <- rootsQ.result
+      } yield {
+        rootItems
+      }
+    }.map {
+      case (nodes) =>
+        composer.reconstitute(nodes, Nil)
+    }
+  }
+
+  def getSteps(ids: List[StepTreeId]): Future[List[StepTree]] = {
+    // TODO: Optimize to one query
+    Future.sequence(ids.map(getStep))
+  }
+
   def getStep(stepTreeId: StepTreeId): Future[StepTree] = {
     val idQuery = sql"""
                      WITH RECURSIVE getChild(kids) AS (
