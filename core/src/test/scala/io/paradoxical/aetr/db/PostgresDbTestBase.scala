@@ -1,8 +1,11 @@
 package io.paradoxical.aetr.db
 
 import com.google.inject.{Guice, Injector, Module}
+import com.twitter.inject.TwitterModule
 import io.paradoxical.aetr.TestBase
 import io.paradoxical.aetr.core.config.{ConfigLoader, ServiceConfig}
+import io.paradoxical.aetr.core.db.DbInitializer
+import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.server.modules.Modules
 import io.paradoxical.rdb.config.RdbCredentials
 import net.codingwell.scalaguice.InjectorExtensions._
@@ -51,5 +54,15 @@ object TestModules {
     def overlay(overrideModules: Module*): List[Module] = {
       List(com.google.inject.util.Modules.`override`(modules: _*).`with`(overrideModules: _*))
     }
+
+    def ignore[T <: Module : Manifest] = {
+      modules.filterNot(_.getClass == manifest[T].runtimeClass)
+    }
+  }
+}
+
+class MockStorageModule(stepDb: StepDb) extends TwitterModule {
+  protected override def configure(): Unit = {
+    bind[StepDb].toInstance(stepDb)
   }
 }

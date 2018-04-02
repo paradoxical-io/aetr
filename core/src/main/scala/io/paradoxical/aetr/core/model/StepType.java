@@ -1,4 +1,4 @@
-package io.paradoxical.aetr.core.db.dao;
+package io.paradoxical.aetr.core.model;
 
 public enum StepType {
     Sequential,

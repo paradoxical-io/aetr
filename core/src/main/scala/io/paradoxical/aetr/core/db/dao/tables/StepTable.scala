@@ -1,7 +1,7 @@
 package io.paradoxical.aetr.core.db.dao.tables
 
-import io.paradoxical.aetr.core.db.dao.{DataMappers, StepType}
-import io.paradoxical.aetr.core.model.{Execution, NodeName, StepTreeId}
+import io.paradoxical.aetr.core.db.dao.DataMappers
+import io.paradoxical.aetr.core.model._
 import io.paradoxical.rdb.slick.dao.SlickDAO
 import java.time.Instant
 import javax.inject.Inject

@@ -26,6 +26,26 @@ class StepDb @Inject()(
   import dataMappers._
   import provider.driver.api._
 
+  def getRootSteps(): Future[Seq[StepTree]] = {
+    val rootsQ = steps.query.filter(s => s.id === s.root || s.root.isEmpty)
+
+    provider.withDB {
+      for {
+        rootItems <- rootsQ.result
+      } yield {
+        rootItems
+      }
+    }.map {
+      case (nodes) =>
+        composer.reconstitute(nodes, Nil)
+    }
+  }
+
+  def getSteps(ids: List[StepTreeId]): Future[List[StepTree]] = {
+    // TODO: Optimize to one query
+    Future.sequence(ids.map(getStep))
+  }
+
   def getStep(stepTreeId: StepTreeId): Future[StepTree] = {
     val idQuery = sql"""
                      WITH RECURSIVE getChild(kids) AS (
@@ -85,20 +105,26 @@ class StepDb @Inject()(
     }
   }
 
-  def upsertRun(run: Run): Future[Unit] = {
+  def upsertRun(run: Run): Future[RunInstanceId] = {
     val daos = runDaoManager.runToDao(run)
 
     val updateDao = DBIO.sequence(daos.map(upsertIfVersion))
 
     provider.withDB {
       updateDao.transactionally
-    }.map(_ => {})
+    }.map(_ => run.id)
   }
 
-  def getRun(rootId: RootId): Future[Run] = {
+  def getRunTree(rootId: RootId): Future[Run] = {
     val relatedToRoot = runs.query.filter(_.root === RunInstanceId(rootId.value)).result
 
     provider.withDB(relatedToRoot).flatMap(resolveRunFromTreeNodes(rootId, _))
+  }
+
+  def getRun(runInstanceId: RunInstanceId): Future[RunDao] = {
+    val run = runs.query.filter(_.id === runInstanceId).result.head
+
+    provider.withDB(run)
   }
 
   /**
@@ -196,7 +222,7 @@ class StepDb @Inject()(
         logger.debug(s"Acquired lock $newLockId to expire on $lockExpirationTime")
 
         for {
-          data <- getRun(rootId).map(block).map(Some(_))
+          data <- getRunTree(rootId).map(block).map(Some(_))
           _ <- provider.withDB(unlockQuery)
         } yield {
           logger.debug(s"Unlocked lock $newLockId")

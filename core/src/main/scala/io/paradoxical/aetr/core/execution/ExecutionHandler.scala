@@ -27,8 +27,8 @@ class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
         storage.trySetRunState(actionable.run.id, actionable.run.version, RunState.Complete)
     }
 
-    // if by the time this line runs its already complete, dont set it to executing
-    // if we fail here we will end up retrying the execution
+    // if by the time this line runs its already complete the version will be updated
+    // and this line will no-op. This is because we are using the version _pre_ execution
     storage.trySetRunState(actionable.run.id, actionable.run.version, RunState.Executing)
   }
 

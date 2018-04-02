@@ -1,10 +1,10 @@
-package io.paradoxical.aetr.db
+package io.paradoxical.aetr.core.db
 
 import io.paradoxical.aetr.core.db.dao.tables.{Runs, StepChildren, Steps}
+import io.paradoxical.common.extensions.Extensions._
 import io.paradoxical.rdb.slick.providers.SlickDBProvider
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
-import io.paradoxical.common.extensions.Extensions._
 
 class DbInitializer @Inject()(
   provider: SlickDBProvider,

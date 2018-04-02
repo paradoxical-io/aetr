@@ -6,8 +6,7 @@ import io.paradoxical.finatra.Framework
 class PingController extends Framework.RestApi {
   getWithDoc("/ping") {
     _.description("Ping API")
-  } { request: Request =>
-    info("ping")
+  } { _: Request =>
     "pong"
   }
 }

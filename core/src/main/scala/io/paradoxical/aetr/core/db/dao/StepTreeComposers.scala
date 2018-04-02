@@ -17,7 +17,7 @@ class StepTreeComposer {
     def getChildren(id: StepTreeId): Seq[StepTreeDao] = {
       val children = stepChildren.filter(_.id == id).sortBy(_.childOrder).map(_.childId)
 
-      bag.filter(item => children.contains(item.id))
+      children.flatMap(x => bag.find(_.id == x))
     }
 
     def resolve(stepTreeDao: StepTreeDao): StepTree = {
