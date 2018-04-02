@@ -40,7 +40,7 @@ case class ParallelParent(
   name: NodeName,
   children: List[StepTree] = Nil,
   root: Option[StepTreeId] = None,
-  reducer: Reducer = Reducer.noop,
+  reducer: Reducer = Reducer.last,
   mapper: Mapper = Mapper.identity // Applied to the final, reduced result
 ) extends Parent with MapsResult {
   override def addTree(stepTree: StepTree): Parent = {

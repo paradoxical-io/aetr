@@ -15,7 +15,8 @@ case class Run(
   stateChangedAt: Instant = Instant.now(),
   var parent: Option[Run] = None,
   var state: RunState = RunState.Pending,
-  var result: Option[ResultData] = None
+  input: Option[ResultData] = None,
+  var output: Option[ResultData] = None
 ) {
   override def toString: String = repr.toString
 }

@@ -2,6 +2,7 @@ package io.paradoxical.aetr.core.db.dao
 
 import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.db.dao.tables._
+import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.rdb.slick.providers.SlickDBProvider
 import java.time.temporal.ChronoUnit
@@ -105,8 +106,8 @@ class StepDb @Inject()(
     }
   }
 
-  def upsertRun(run: Run): Future[RunInstanceId] = {
-    val daos = runDaoManager.runToDao(run)
+  def upsertRun(run: Run, input: Option[ResultData] = None): Future[RunInstanceId] = {
+    val daos = runDaoManager.runToDao(run.copy(input = input))
 
     val updateDao = DBIO.sequence(daos.map(upsertIfVersion))
 
@@ -128,6 +129,23 @@ class StepDb @Inject()(
   }
 
   /**
+   * Finds only runs related to actions in the state
+   *
+   * @param states
+   * @return
+   */
+  def findActionableRuns(states: List[RunState]): Future[Seq[StepRunDao]] = {
+    val rootsInState =
+      runs.query.
+        join(steps.query).
+        on { case (r, s) => r.stepTreeId === s.id }.
+        filter { case (r, s) => (r.state inSet states) && s.execution.isDefined }.
+        map { case (r, s) => (s, r) }
+
+    provider.withDB(rootsInState.result).map(_.map(StepRunDao.tupled))
+  }
+
+  /**
    * Given a query to find the related run items for a tree,
    * execute the query and resolve the final run tree
    *
@@ -138,7 +156,7 @@ class StepDb @Inject()(
     val root = data.find(_.id.value == rootId.value).get
 
     getStep(root.stepTreeId).map(tree => {
-      runDaoManager.reconstitute(rootId, data, tree)
+      new RunManager(runDaoManager.reconstitute(rootId, data, tree)).root
     })
   }
 
@@ -256,3 +274,5 @@ class StepDb @Inject()(
 }
 
 case class VersionMismatchError() extends RuntimeException()
+
+case class StepRunDao(stepTreeDao: StepTreeDao, runDao: RunDao)

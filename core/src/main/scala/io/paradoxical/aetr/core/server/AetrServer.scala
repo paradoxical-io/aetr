@@ -5,6 +5,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
+import io.paradoxical.aetr.core.lifecycle.Startup
 import io.paradoxical.aetr.core.server.controllers.{PingController, RunsController, StepsController}
 import io.paradoxical.aetr.core.server.serialization.JsonModule
 import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
@@ -19,6 +20,12 @@ class AetrServer(override val modules: Seq[Module]) extends HttpServer with Swag
   }
 
   override protected def jacksonModule: Module = new JsonModule()
+
+  protected override def postWarmup(): Unit = {
+    injector.instance[Startup].start()
+
+    super.postWarmup()
+  }
 
   override def configureHttp(router: HttpRouter): Unit = {
     router

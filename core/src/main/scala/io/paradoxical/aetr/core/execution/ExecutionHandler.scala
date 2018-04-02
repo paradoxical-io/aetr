@@ -1,16 +1,9 @@
 package io.paradoxical.aetr.core.execution
 
 import io.paradoxical.aetr.core.db.Storage
+import io.paradoxical.aetr.core.execution.api.UrlExecutor
 import io.paradoxical.aetr.core.model._
-import java.net.URL
 import javax.inject.Inject
-
-case class RunToken(runId: RunId, rootId: RootId)
-
-trait UrlExecutor {
-  // POST url?aetr=runToken <data>
-  def execute(token: RunToken, url: URL, data: Option[ResultData]): Unit
-}
 
 class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)

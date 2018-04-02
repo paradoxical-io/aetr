@@ -3,6 +3,8 @@ package io.paradoxical.aetr.core.graph
 import io.paradoxical.aetr.core.model._
 
 class RunManager(val root: Run) {
+  sync(root)
+
   def this(stepTree: StepTree) {
     this(new TreeManager(stepTree).newRun())
   }
@@ -35,10 +37,14 @@ class RunManager(val root: Run) {
     complete(root, result)
   }
 
+  def complete(runInstanceId: RunInstanceId, result: Option[ResultData]): Unit = {
+    find(runInstanceId).foreach(complete(_, result))
+  }
+
   def complete(run: Run, result: Option[ResultData] = None): Unit = {
     run.state = RunState.Complete
 
-    run.result = result
+    run.output = result
 
     run.parent.foreach(sync)
   }
@@ -50,7 +56,7 @@ class RunManager(val root: Run) {
   private def sync(run: Run): Unit = {
     run.state = determineState(run)
 
-    run.result = getResult(run)
+    run.output = getResult(run)
 
     run.parent.foreach(sync)
   }
@@ -83,20 +89,20 @@ class RunManager(val root: Run) {
 
   def getResult(run: Run): Option[ResultData] = {
     if (run.children.isEmpty) {
-      run.result
+      run.output
     } else {
       if (determineState(run) == RunState.Complete) {
         run.repr match {
           case x: Parent =>
             x match {
               case p: SequentialParent =>
-                run.children.lastOption.flatMap(_.result)
+                run.children.lastOption.flatMap(_.output)
               case p: ParallelParent =>
-                val results = run.children.flatMap(_.result)
+                val results = run.children.flatMap(_.output)
 
                 p.reducer.reduce(results).map(p.mapper.map)
             }
-          case action: Action => run.result.map(action.mapper.map)
+          case action: Action => run.output.map(action.mapper.map)
         }
       } else {
         None
@@ -104,8 +110,8 @@ class RunManager(val root: Run) {
     }
   }
 
-  def next(seed: Option[ResultData] = None): Seq[Actionable] = {
-    next(root, seed)
+  def next(): Seq[Actionable] = {
+    next(root, root.input)
   }
 
   private def next(run: Run, data: Option[ResultData]): Seq[Actionable] = {
@@ -123,8 +129,8 @@ class RunManager(val root: Run) {
                 // NOTE that mappers are not applied to root seed data
                 run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
                   run.repr match {
-                    case canMap: MapsResult => run.result.map(canMap.mapper.map)
-                    case _ => run.result
+                    case canMap: MapsResult => run.output.map(canMap.mapper.map)
+                    case _ => run.output
                   }
                 })
               }

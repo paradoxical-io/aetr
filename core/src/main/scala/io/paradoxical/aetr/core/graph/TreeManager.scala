@@ -33,12 +33,13 @@ class TreeManager(root: StepTree) {
     }
   }
 
-  def newRun(): Run = {
+  def newRun(input: Option[ResultData] = None): Run = {
     val r = model.Run(
       RunInstanceId(rootId.value),
       getChildren(root),
       rootId,
-      root
+      root,
+      input = input
     )
 
     setParents(r)

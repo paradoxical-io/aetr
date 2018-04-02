@@ -30,11 +30,11 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
       root = Some(rootId)
     ).addTree(action1).addTree(action2)
 
-    val root = SequentialParent(name = NodeName("root"), id = rootId).addTree(sequentialParent).addTree(parallelParent)
+    val treeRoot = SequentialParent(name = NodeName("root"), id = rootId).addTree(sequentialParent).addTree(parallelParent)
   }
 
   "Step state" should "sub children" in new ActionList {
-    val m = new RunManager(root)
+    val m = new RunManager(treeRoot)
 
     def advance(action: Action*) = {
       val nextActions = m.next()
@@ -61,7 +61,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "re-run pending children" in new ActionList {
-    val m = new RunManager(root)
+    val m = new RunManager(treeRoot)
 
     val all = m.flatten
 
@@ -103,7 +103,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "find a node" in new ActionList {
-    val manager = new RunManager(root)
+    val manager = new RunManager(treeRoot)
 
     val allNodes = manager.flatten
 
@@ -113,19 +113,21 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "flatten step trees" in new ActionList {
-    new TreeManager(root).flatten shouldEqual List(
-      root, sequentialParent, action1, action2, parallelParent, action3, action4
+    new TreeManager(treeRoot).flatten shouldEqual List(
+      treeRoot, sequentialParent, action1, action2, parallelParent, action3, action4
     )
   }
 
   it should "flatten run lists" in new ActionList {
-    new RunManager(root).flatten.map(_.repr) shouldEqual new TreeManager(root).flatten
+    new RunManager(treeRoot).flatten.map(_.repr) shouldEqual new TreeManager(treeRoot).flatten
   }
 
   it should "pass the result of the previous into the current" in new ActionList {
-    val m = new RunManager(root)
+    val run = new TreeManager(treeRoot).newRun(input = Some(ResultData("seed")))
 
-    val actionableAction1 = m.next(seed = Some(ResultData("seed"))).head
+    val m = new RunManager(run)
+
+    val actionableAction1 = m.next().head
 
     assert(actionableAction1.previousResult.contains(ResultData("seed")))
 

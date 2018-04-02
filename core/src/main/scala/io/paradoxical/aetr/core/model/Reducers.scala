@@ -10,6 +10,10 @@ object Reducer {
       override def reduce(ins: Seq[ResultData]): Option[ResultData] = None
     }
 
+  val last = new Reducer {
+    override def reduce(ins: Seq[ResultData]): Option[ResultData] = ins.lastOption
+  }
+
   def fromFunc(f: Seq[ResultData] => Option[ResultData]): Reducer =
     new Reducer {
       override def reduce(ins: Seq[ResultData]): Option[ResultData] = f(ins)

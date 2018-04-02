@@ -4,8 +4,11 @@ import com.google.inject.{Module, Provides}
 import com.twitter.inject.TwitterModule
 import io.paradoxical.aetr.core.config.{ConfigLoader, ServiceConfig}
 import io.paradoxical.aetr.core.db.PostgresDbProvider
+import io.paradoxical.aetr.core.execution.api.{UrlExecutor, UrlExecutorImpl}
 import io.paradoxical.finatra.modules.Defaults
 import io.paradoxical.jackson.JacksonSerializer
+import io.paradoxical.rdb.hikari.metrics.{DisabledMetricsTrackerFactory, LoggingMetricsTrackerFactory}
+import io.paradoxical.rdb.slick.providers.custom.HikariSourceProvider
 import io.paradoxical.rdb.slick.providers.{DataSourceProviders, SlickDBProvider}
 import java.time.Clock
 import javax.inject.Singleton
@@ -21,9 +24,16 @@ object Modules {
       new ConfigModule(config),
       new PostgresModule,
       new ClockModule(),
-      new JacksonModule()
+      new JacksonModule(),
+      new ApiExecutorModule()
     ) ++
     Defaults()
+  }
+}
+
+class ApiExecutorModule extends TwitterModule {
+  protected override def configure(): Unit = {
+    bind[UrlExecutor].to[UrlExecutorImpl]
   }
 }
 
@@ -58,6 +68,6 @@ class PostgresModule extends TwitterModule {
   @Provides
   @Singleton
   def dataSource(config: ServiceConfig): DataSource = {
-    DataSourceProviders.default(config.db)
+    HikariSourceProvider.withHikariCP(config.db.toBasicRdb, config.db.connection_pool.toHikariConfig, DisabledMetricsTrackerFactory)
   }
 }
