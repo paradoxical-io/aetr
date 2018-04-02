@@ -68,7 +68,8 @@ case class StepTreeId(value: UUID) extends UuidValue
   defaultImpl = classOf[NoOp],
   property = "type")
 @JsonSubTypes(value = Array(
-  new Type(value = classOf[ApiExecution], name = "api")
+  new Type(value = classOf[ApiExecution], name = "api"),
+  new Type(value = classOf[NoOp], name = "no-op")
 ))
 sealed trait Execution
 case class ApiExecution(url: URL) extends Execution

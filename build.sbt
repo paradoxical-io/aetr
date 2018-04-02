@@ -42,6 +42,7 @@ lazy val core = project.settings(commonSettings).settings(
       "com.iheart" %% "ficus" % "1.4.3",
       "com.typesafe" % "config" % "1.3.3",
       "org.slf4j" % "jul-to-slf4j" % "1.7.25",
+      "org.codehaus.janino" % "janino" % "2.7.8",
       "org.slf4j" % "jcl-over-slf4j" % "1.7.25",
       "ch.qos.logback" % "logback-classic" % versions.logback % "test",
       "io.paradoxical" % "docker-client" % versions.paradox.docker % "test",

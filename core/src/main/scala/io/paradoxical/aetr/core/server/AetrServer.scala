@@ -5,11 +5,11 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
-import io.paradoxical.aetr.core.server.controllers.PingController
+import io.paradoxical.aetr.core.server.controllers.{PingController, StepsController}
 import io.paradoxical.aetr.core.server.serialization.JsonModule
 import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
 
-class AetrServer(modules: Seq[Module]) extends HttpServer with SwaggerDocs {
+class AetrServer(override val modules: Seq[Module]) extends HttpServer with SwaggerDocs {
   override def defaultFinatraHttpPort = ":9999"
 
   override def documentation = new ApiDocumentationConfig {
@@ -25,8 +25,14 @@ class AetrServer(modules: Seq[Module]) extends HttpServer with SwaggerDocs {
       .filter[LoggingMDCFilter[Request, Response]]
       .filter[TraceIdMDCFilter[Request, Response]]
       .filter[CommonFilters]
-      .add[PingController]
+
+    // create swagger
+    swaggerInfo
 
     configureDocumentation(router)
+
+    router
+      .add[PingController]
+      .add[StepsController]
   }
 }
