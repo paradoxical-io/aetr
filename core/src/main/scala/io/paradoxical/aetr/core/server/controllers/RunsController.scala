@@ -47,16 +47,39 @@ class RunsController @Inject()(
   }
 
   getWithDoc("/api/v1/runs/active") {
-    _.description("Get active runs").responseWith[List[GetActiveRunsResult]](status = 200)
+    _.description("Get active runs").responseWith[List[GetRunDataResult]](status = 200)
   } { r: Request =>
-    db.findActionableRuns(List(RunState.Executing, RunState.Pending)).map(_.map(x =>
-      GetActiveRunsResult(
+    db.findRuns(List(RunState.Executing, RunState.Pending)).map(_.map(x =>
+      GetRunDataResult(
         x.runDao.id,
         RootId(x.runDao.root.value),
         x.runDao.state,
         x.runDao.stepTreeId,
-        x.stepTreeDao.name
+        x.stepTreeDao.name,
+        x.runDao.result
       )))
+  }
+
+  getWithDoc("/api/v1/runs/state") {
+    _.description("Get runs in a state").request[GetRunsByStateRequest].responseWith[List[GetRunDataResult]](status = 200)
+  } { r: GetRunsByStateRequest =>
+    db.findRuns(r.state).map(_.map(x =>
+      GetRunDataResult(
+        x.runDao.id,
+        RootId(x.runDao.root.value),
+        x.runDao.state,
+        x.runDao.stepTreeId,
+        x.stepTreeDao.name,
+        x.runDao.result
+      )))
+  }
+
+  getWithDoc("/api/v1/runs/related/step/:id") {
+    _.description("Get runs related to a step").request[GetRelatedRunsRequest].responseWith[GetRelatedRunsResult](status = 200)
+  } { r: GetRelatedRunsRequest =>
+    db.findRelatedRuns(r.id).
+      map(_.map(dao => GetRunResult(state = dao.state, result = dao.result, dao.stepTreeId))).
+      map(GetRelatedRunsResult)
   }
 
   postWithDoc("/api/v1/runs/complete") {
@@ -84,12 +107,18 @@ case class GetRunResult(state: RunState, result: Option[ResultData], stepTreeId:
 
 case class CompleteRunRequest(@QueryParam token: String, result: Option[ResultData])
 
-case class GetActiveRunsResult(
+case class GetRunDataResult(
   id: RunInstanceId,
   root: RootId,
   state: RunState,
   stepTreeId: StepTreeId,
-  nodeName: NodeName
+  nodeName: NodeName,
+  result: Option[ResultData]
 ) {
   val token = RunToken(id, root).asRaw
 }
+
+case class GetRelatedRunsRequest(@RouteParam id: StepTreeId)
+case class GetRelatedRunsResult(runs: Seq[GetRunResult])
+
+case class GetRunsByStateRequest(@QueryParam state: List[RunState])

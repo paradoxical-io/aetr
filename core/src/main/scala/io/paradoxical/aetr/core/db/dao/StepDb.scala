@@ -134,7 +134,7 @@ class StepDb @Inject()(
    * @param states
    * @return
    */
-  def findActionableRuns(states: List[RunState]): Future[Seq[StepRunDao]] = {
+  def findRuns(states: List[RunState]): Future[Seq[StepRunDao]] = {
     val rootsInState =
       runs.query.
         join(steps.query).
@@ -143,6 +143,13 @@ class StepDb @Inject()(
         map { case (r, s) => (s, r) }
 
     provider.withDB(rootsInState.result).map(_.map(StepRunDao.tupled))
+  }
+
+  def findRelatedRuns(stepTreeId: StepTreeId): Future[Seq[RunDao]] = {
+    // TODO: only show roots?
+    provider.withDB {
+      runs.query.filter(_.stepTreeId === stepTreeId).result
+    }
   }
 
   /**
