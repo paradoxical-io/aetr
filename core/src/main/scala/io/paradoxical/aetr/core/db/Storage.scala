@@ -60,7 +60,7 @@ class Storage @Inject()(stepDb: StepDb) {
    * @return
    */
   def loadRun(root: RootId): Run = {
-    stepDb.getRun(root).waitForResult()
+    stepDb.getRunTree(root).waitForResult()
   }
 
   /**

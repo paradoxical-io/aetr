@@ -22,10 +22,10 @@ case class Run(
 
 trait RunId extends UuidValue with Product
 
-case class RootId(value: UUID) extends RunId {
+case class RootId(value: UUID) extends UuidValue with RunId {
   def asRunInstance = RunInstanceId(value)
 }
-case class RunInstanceId(value: UUID) extends RunId
+case class RunInstanceId(value: UUID) extends UuidValue with RunId
 
 case class Version(value: Long) extends LongValue {
   def inc(): Version = Version(value + 1)

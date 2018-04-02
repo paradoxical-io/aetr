@@ -95,7 +95,7 @@ class DbTests extends PostgresDbTestBase {
 
     db.upsertRun(runRoot).waitForResult()
 
-    val storedRoot = db.getRun(runRoot.rootId).waitForResult()
+    val storedRoot = db.getRunTree(runRoot.rootId).waitForResult()
 
     new RunManager(storedRoot).flatten.map(_.id) shouldEqual new RunManager(runRoot).flatten.map(_.id)
   }
@@ -121,7 +121,7 @@ class DbTests extends PostgresDbTestBase {
     val mgr2 = new RunManager(stepRoot)
 
     def complete(run: RootId): Unit = {
-      val m = new RunManager(db.getRun(run).waitForResult())
+      val m = new RunManager(db.getRunTree(run).waitForResult())
 
       m.completeAll()
 
@@ -129,7 +129,7 @@ class DbTests extends PostgresDbTestBase {
     }
 
     def pending(): List[Run] = {
-      val runs = db.findUnlockedRuns(RunState.Pending).flatMap(r => Future.sequence(r.map(db.getRun)))
+      val runs = db.findUnlockedRuns(RunState.Pending).flatMap(r => Future.sequence(r.map(db.getRunTree)))
 
       runs.waitForResult()
     }
@@ -176,7 +176,7 @@ class DbTests extends PostgresDbTestBase {
     }
 
     // pull from the db to get the latest version
-    val pulled = db.getRun(runRoot.rootId).waitForResult()
+    val pulled = db.getRunTree(runRoot.rootId).waitForResult()
 
     // update it back should be ok since versions match
     db.upsertRun(pulled).waitForResult()
