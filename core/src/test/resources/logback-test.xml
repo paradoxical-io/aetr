@@ -40,9 +40,6 @@
   <logger name="slick.jdbc.JdbcModelBuilder"              additivity="false" level="${log.slick.createModel:-info}">
     <appender-ref ref="DB-FILE" />
   </logger>
-  <logger name="slick.relational.ResultConverterCompiler" additivity="false" level="${log.slick.resultConverter:-inherited}">
-    <appender-ref ref="DB-FILE" />
-  </logger>
   <logger name="slick.util.AsyncExecutor"                 additivity="false" level="${log.slick.util.asyncExecutor:-inherited}">
     <appender-ref ref="DB-FILE" />
   </logger>

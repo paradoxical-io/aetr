@@ -7,7 +7,7 @@ import java.util.UUID
 case class Run(
   id: RunInstanceId,
   var children: Seq[Run],
-  rootId: Root,
+  rootId: RootId,
   repr: StepTree,
   version: Version = Version(1),
   createdAt: Instant = Instant.now(),
@@ -22,7 +22,9 @@ case class Run(
 
 trait RunId extends UuidValue with Product
 
-case class Root(value: UUID) extends RunId
+case class RootId(value: UUID) extends RunId {
+  def asRunInstance = RunInstanceId(value)
+}
 case class RunInstanceId(value: UUID) extends RunId
 
 case class Version(value: Long) extends LongValue {

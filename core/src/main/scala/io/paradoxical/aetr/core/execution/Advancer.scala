@@ -2,25 +2,25 @@ package io.paradoxical.aetr.core.execution
 
 import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.graph.RunManager
-import io.paradoxical.aetr.core.model.{Root, Run, RunState}
+import io.paradoxical.aetr.core.model.{RootId, Run, RunState}
 import javax.inject.Inject
+import scala.util.Random
 
 class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def advanceAll(): Unit = {
-    val pendingRuns = storage.findRuns(RunState.Pending)
+    // shuffle the runs to minimize contention on who tries to acquire a lock
+    val pendingRuns = Random.shuffle(storage.findUnlockedRuns(RunState.Pending))
 
-    pendingRuns.foreach(run => {
-      storage.tryAcquire(run).foreach(lock => {
-        dispatch(lock.data)
-
-        storage.releaseRun(lock.id)
-      })
-    })
+    pendingRuns.foreach(runId => storage.tryLock(runId)(run => {
+      if (run.state == RunState.Pending) {
+        dispatch(run)
+      }
+    }))
   }
 
-  def advance(root: Root): Unit = {
+  def advance(root: RootId): Unit = {
     logger.info(s"Advancing root $root")
 
     dispatch(storage.loadRun(root))

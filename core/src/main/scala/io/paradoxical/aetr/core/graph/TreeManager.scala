@@ -5,7 +5,7 @@ import io.paradoxical.aetr.core.model._
 import java.util.UUID
 
 class TreeManager(root: StepTree) {
-  private lazy val rootId = Root(UUID.randomUUID())
+  private lazy val rootId = RootId(UUID.randomUUID())
 
   def flatten: List[StepTree] = {
     def all0(curr: StepTree, acc: List[StepTree]): List[StepTree] = {

@@ -40,7 +40,7 @@ class Completor @Inject()(
         case Success(value) =>
           logger.info(s"Upserted root ${root.id}")
 
-          if(manager.state != RunState.Complete) {
+          if(manager.state == RunState.Pending) {
             advancer.advance(root.rootId)
           }
       }

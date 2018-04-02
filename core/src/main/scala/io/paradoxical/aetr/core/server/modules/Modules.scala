@@ -7,19 +7,29 @@ import io.paradoxical.aetr.core.db.PostgresDbProvider
 import io.paradoxical.finatra.modules.Defaults
 import io.paradoxical.jackson.JacksonSerializer
 import io.paradoxical.rdb.slick.providers.{DataSourceProviders, SlickDBProvider}
+import java.time.Clock
 import javax.inject.Singleton
 import javax.sql.DataSource
 import scala.concurrent.ExecutionContext
 import slick.jdbc.JdbcProfile
 
 object Modules {
-  def apply(config: Option[ServiceConfig] = None)(implicit executionContext: ExecutionContext): List[Module] = {
+  def apply(
+    config: Option[ServiceConfig] = None
+  )(implicit executionContext: ExecutionContext): List[Module] = {
     List(
       new ConfigModule(config),
       new PostgresModule,
+      new ClockModule(),
       new JacksonModule()
     ) ++
     Defaults()
+  }
+}
+
+class ClockModule(clock: Clock = Clock.systemUTC()) extends TwitterModule {
+  protected override def configure(): Unit = {
+    bind[Clock].toInstance(clock)
   }
 }
 
