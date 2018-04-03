@@ -6,7 +6,7 @@ import io.paradoxical.common.extensions.Extensions._
 import javax.inject.Inject
 import scala.util.Try
 
-class Storage @Inject()(stepDb: StepDb) {
+class StepsDbSync @Inject()(stepDb: StepDb) {
   def upsertSteps(stepTree: StepTree): Unit = {
     stepDb.upsertStep(stepTree).waitForResult()
   }

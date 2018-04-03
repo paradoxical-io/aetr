@@ -1,12 +1,12 @@
 package io.paradoxical.aetr.core.execution
 
-import io.paradoxical.aetr.core.db.Storage
+import io.paradoxical.aetr.core.db.StepsDbSync
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model.{RootId, Run, RunState}
 import javax.inject.Inject
 import scala.util.Random
 
-class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
+class Advancer @Inject()(storage: StepsDbSync, executionHandler: ExecutionHandler) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def advanceAll(): Unit = {

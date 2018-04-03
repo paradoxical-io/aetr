@@ -6,7 +6,6 @@ import io.paradoxical.aetr.core.execution.{AdvanceQueuer, Advancer}
 import io.paradoxical.aetr.core.model.RunState
 import io.paradoxical.common.extensions.Extensions._
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
 
 /**
  * On startup try and advance whatever we can.
@@ -19,7 +18,7 @@ class Startup @Inject()(
   advanceQueuer: AdvanceQueuer,
   serviceConfig: ServiceConfig,
   advancer: Advancer
-)(implicit executionContext: ExecutionContext) {
+) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def start(): Unit = {
