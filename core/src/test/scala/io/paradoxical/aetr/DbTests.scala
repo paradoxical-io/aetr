@@ -2,8 +2,10 @@ package io.paradoxical.aetr
 
 import com.google.inject.Guice
 import com.twitter.util.CountDownLatch
-import io.paradoxical.aetr.core.db.{DbInitializer, StepsDbSync}
 import io.paradoxical.aetr.core.db.dao.{StepDb, VersionMismatchError}
+import io.paradoxical.aetr.core.db.{DbInitializer, StepsDbSync}
+import io.paradoxical.aetr.core.execution.ExecutionHandler
+import io.paradoxical.aetr.core.execution.api.UrlExecutor
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.server.modules.ClockModule
@@ -312,5 +314,24 @@ class DbTests extends PostgresDbTestBase {
     // the lock was properly closed in the last run so new locks can be acquired
     assert(lock {})
     assert(db.findUnlockedRuns(RunState.Pending).size == 1)
+  }
+
+  "Execution handler" should "respect run version in setting complete" in withDb { injector =>
+    val db = injector.instance[StepsDbSync]
+
+    val urlExecutor = mock[UrlExecutor]
+
+    val tree = Action(name = NodeName("test"), execution = NoOp())
+
+    val run = new RunManager(tree).root
+
+    db.upsertSteps(tree)
+    db.tryUpsertRun(run)
+
+    new ExecutionHandler(db, urlExecutor).execute(
+      Actionable(db.loadRun(run.rootId), tree, None)
+    )
+
+    db.loadRun(run.rootId).state shouldEqual RunState.Complete
   }
 }
