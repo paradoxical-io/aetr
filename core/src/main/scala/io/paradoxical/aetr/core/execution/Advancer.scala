@@ -21,7 +21,7 @@ class Advancer @Inject()(storage: Storage, executionHandler: ExecutionHandler) {
   }
 
   def advance(root: RootId): Unit = {
-    logger.info(s"Advancing root $root")
+    logger.info(s"Advancing $root")
 
     dispatch(storage.loadRun(root))
   }

@@ -6,19 +6,19 @@ import io.paradoxical.aetr.core.db.Storage
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model.{ResultData, RunState}
 import javax.inject.Inject
-import scala.annotation.tailrec
 import scala.util.{Failure, Success}
 
 class Completor @Inject()(
   storage: Storage,
   serviceConfig: ServiceConfig,
-  advancer: Advancer
+  advancer: AdvanceQueuer
 ) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
-  def complete(runToken: RunToken, data: Option[ResultData]): Unit = {
-    @tailrec
-    def completeSafe(retry: Int): Unit = {
+  def complete(runToken: RunToken, data: Option[ResultData]): Boolean = {
+    logger.info(s"Completing $runToken")
+
+    def completeSafe(retry: Int): Boolean = {
       if (retry >= serviceConfig.maxAtomicRetries) {
         throw MaxRetriesAttempted()
       }
@@ -27,12 +27,20 @@ class Completor @Inject()(
 
       val manager = new RunManager(root)
 
-      manager.find(runToken.runId).foreach(run => {
-        manager.complete(run, data)
+      val updatedRoot = manager.find(runToken.runId).flatMap(run => {
+        if (run.state == RunState.Complete) {
+          logger.warn("Attempting to double complete! Ignoring")
+
+          None
+        } else {
+          manager.complete(run, data)
+
+          Some(manager.root)
+        }
       })
 
       // TODO: try upsert only from node -> parent -> root
-      storage.tryUpsertRun(manager.root) match {
+      updatedRoot.map(root => storage.tryUpsertRun(root) match {
         case Failure(exception) =>
           logger.warn("Unable to upsert run, retrying", exception)
 
@@ -40,10 +48,10 @@ class Completor @Inject()(
         case Success(value) =>
           logger.info(s"Upserted root ${root.id}")
 
-          if(manager.state == RunState.Pending) {
-            advancer.advance(root.rootId)
+          if (manager.state == RunState.Pending) {
+            advancer.enqueue(root.rootId)
           }
-      }
+      }).exists(_ => true)
     }
 
     completeSafe(1)

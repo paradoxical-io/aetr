@@ -12,10 +12,10 @@ case class Run(
   version: Version = Version(1),
   createdAt: Instant = Instant.now(),
   updatedAt: Instant = Instant.now(),
-  stateChangedAt: Instant = Instant.now(),
   var parent: Option[Run] = None,
   var state: RunState = RunState.Pending,
-  var result: Option[ResultData] = None
+  input: Option[ResultData] = None,
+  var output: Option[ResultData] = None
 ) {
   override def toString: String = repr.toString
 }

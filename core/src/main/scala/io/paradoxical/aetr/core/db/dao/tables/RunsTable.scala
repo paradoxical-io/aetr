@@ -18,10 +18,10 @@ case class RunDao(
   version: Version,
   stepTreeId: StepTreeId,
   state: RunState,
-  result: Option[ResultData],
+  input: Option[ResultData],
+  output: Option[ResultData],
   createdAt: Instant,
   lastUpdatedAt: Instant,
-  stateUpdatedAt: Instant,
   actionLockedTill: Option[Instant] = None,
   lockId: Option[LockId] = None
 )
@@ -47,13 +47,13 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
 
     def state = column[RunState]("state")
 
-    def result = column[Option[ResultData]]("result")
+    def input = column[Option[ResultData]]("input")
+
+    def output = column[Option[ResultData]]("output")
 
     def createdAt = column[Instant]("created_at")
 
     def lastUpdatedAt = column[Instant]("updated_at")
-
-    def stateUpdatedAt = column[Instant]("state_updated_at")
 
     def actionLockedTill = column[Option[Instant]]("action_locked_till")
 
@@ -67,10 +67,10 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
         version,
         stepTreeId,
         state,
-        result,
+        input,
+        output,
         createdAt,
         lastUpdatedAt,
-        stateUpdatedAt,
         actionLockedTill,
         lockId
       ) <> (RunDao.tupled, RunDao.unapply)
