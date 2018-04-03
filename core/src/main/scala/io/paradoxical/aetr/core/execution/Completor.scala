@@ -2,14 +2,14 @@ package io.paradoxical.aetr.core.execution
 
 import io.exceptions.MaxRetriesAttempted
 import io.paradoxical.aetr.core.config.ServiceConfig
-import io.paradoxical.aetr.core.db.Storage
+import io.paradoxical.aetr.core.db.StepsDbSync
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model.{ResultData, RunState}
 import javax.inject.Inject
 import scala.util.{Failure, Success}
 
 class Completor @Inject()(
-  storage: Storage,
+  storage: StepsDbSync,
   serviceConfig: ServiceConfig,
   advancer: AdvanceQueuer
 ) {

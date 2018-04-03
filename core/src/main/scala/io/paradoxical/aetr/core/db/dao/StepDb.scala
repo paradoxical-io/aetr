@@ -116,20 +116,32 @@ class StepDb @Inject()(
     }.map(_ => run.id)
   }
 
+  /**
+   * Gets the entire run tree from a root
+   *
+   * @param rootId
+   * @return
+   */
   def getRunTree(rootId: RootId): Future[Run] = {
     val relatedToRoot = runs.query.filter(_.root === RunInstanceId(rootId.value)).result
 
     provider.withDB(relatedToRoot).flatMap(resolveRunFromTreeNodes(rootId, _))
   }
 
-  def getRun(runInstanceId: RunInstanceId): Future[RunDao] = {
+  /**
+   * Gets a single run instance, not the entire tree
+   *
+   * @param runInstanceId
+   * @return
+   */
+  def getRunInstance(runInstanceId: RunInstanceId): Future[RunDao] = {
     val run = runs.query.filter(_.id === runInstanceId).result.head
 
     provider.withDB(run)
   }
 
   /**
-   * Finds only runs related to actions in the state
+   * Finds only runs in the state
    *
    * @param states
    * @param rootsOnly If true, only roots of trees are returned
@@ -193,6 +205,12 @@ class StepDb @Inject()(
     provider.withDB(update).map(updated => updated == 1)
   }
 
+  /**
+   * Finds roots that are unlocked (either lock expired or not locked)
+   *
+   * @param state
+   * @return
+   */
   def findUnlockedRuns(state: RunState): Future[List[RootId]] = {
     val pendingRoots = runs.query.filter(r =>
       r.state === state &&

@@ -1,11 +1,11 @@
 package io.paradoxical.aetr.core.execution
 
-import io.paradoxical.aetr.core.db.Storage
+import io.paradoxical.aetr.core.db.StepsDbSync
 import io.paradoxical.aetr.core.execution.api.UrlExecutor
 import io.paradoxical.aetr.core.model._
 import javax.inject.Inject
 
-class ExecutionHandler @Inject()(storage: Storage, urlExecutor: UrlExecutor) {
+class ExecutionHandler @Inject()(storage: StepsDbSync, urlExecutor: UrlExecutor) {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def execute(actionable: Actionable): Unit = {

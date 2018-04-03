@@ -37,7 +37,7 @@ class RunsController @Inject()(
   getWithDoc("/api/v1/runs/partial/:id") {
     _.description("Get raw run id state. Only tracks the state of this instance,  not representative of the entire tree").request[GetRunRequest].responseWith[GetRunResult](status = 200)
   } { r: GetRunRequest =>
-    db.getRun(RunInstanceId(r.id)).map(dao => GetRunResult(state = dao.state, result = dao.output, dao.stepTreeId))
+    db.getRunInstance(RunInstanceId(r.id)).map(dao => GetRunResult(state = dao.state, result = dao.output, dao.stepTreeId))
   }
 
   getWithDoc("/api/v1/runs/:id") {

@@ -2,7 +2,7 @@ package io.paradoxical.aetr
 
 import com.google.inject.Guice
 import com.twitter.util.CountDownLatch
-import io.paradoxical.aetr.core.db.{DbInitializer, Storage}
+import io.paradoxical.aetr.core.db.{DbInitializer, StepsDbSync}
 import io.paradoxical.aetr.core.db.dao.{StepDb, VersionMismatchError}
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
@@ -191,7 +191,7 @@ class DbTests extends PostgresDbTestBase {
   it should "lock on a row" in withDb { injector =>
     val leaf1: Action = Action(name = NodeName("leaf1"))
 
-    val db = injector.instance[Storage]
+    val db = injector.instance[StepsDbSync]
 
     db.upsertSteps(leaf1)
 
@@ -265,7 +265,7 @@ class DbTests extends PostgresDbTestBase {
 
     injector.instance[DbInitializer].init()
 
-    val db = injector.instance[Storage]
+    val db = injector.instance[StepsDbSync]
 
     db.upsertSteps(leaf1)
 
