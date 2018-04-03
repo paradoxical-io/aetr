@@ -8,5 +8,17 @@ case class ServiceConfig(
   db: RdbConfigWithConnectionPool,
   dbLockTime: FiniteDuration = 60 seconds,
   threadSleepOnDequeueError: FiniteDuration = 10 seconds,
-  pendingPollTime: FiniteDuration = 30 seconds
+  pendingPollTime: FiniteDuration = 30 seconds,
+  stats: StatsConfig
+)
+
+case class StatsConfig(
+  print_to_console: Boolean = false,
+  graphite: Option[GraphiteConfig]
+)
+
+case class GraphiteConfig(
+  host: String,
+  port: Int,
+  interval: FiniteDuration = 10 seconds
 )

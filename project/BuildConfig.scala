@@ -11,6 +11,11 @@ object BuildConfig {
       val slick = "1.0"
       val docker = "1.24"
     }
+    val ficus = "1.4.3"
+    val typesafeConfig = "1.3.3"
+    val julSlf4j = "1.7.25"
+    val janino = "2.7.8"
+    val dropwizardMetrics = "4.0.0"
     val guice = "4.0"
     val mockito = "1.9.5"
     val logback = "1.1.7"
