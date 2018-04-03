@@ -202,7 +202,9 @@ class StepDb @Inject()(
       (version.inc(), state, result, now)
     )
 
-    provider.withDB(update).map(updated => updated == 1)
+    provider.withDB(update).map(updated => {
+      updated == 1
+    })
   }
 
   /**
