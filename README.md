@@ -14,7 +14,7 @@ The data model is represented by two concepts
 
 StepTree
 ----
-A step tree is a template of what to do. It is the workflow.  Trees are composed of 3 options, either a parent node which has children to be run in 
+A step tree is a template of what to do. It is the workflow.  Tredbstdbtes are composed of 3 options, either a parent node which has children to be run in 
 either sequential or parallel mode, or a child node which is an action.
 
 Currently supported actions are executing POST requests on an API URL.  

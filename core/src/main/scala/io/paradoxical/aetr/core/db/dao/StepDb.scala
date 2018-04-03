@@ -132,17 +132,26 @@ class StepDb @Inject()(
    * Finds only runs related to actions in the state
    *
    * @param states
+   * @param rootsOnly If true, only roots of trees are returned
+   *                  otherwise only leaves of trees
    * @return
    */
-  def findRuns(states: List[RunState]): Future[Seq[StepRunDao]] = {
+  def findRuns(states: List[RunState], rootsOnly: Boolean = false): Future[Seq[StepRunDao]] = {
     val rootsInState =
       runs.query.
         join(steps.query).
         on { case (r, s) => r.stepTreeId === s.id }.
-        filter { case (r, s) => (r.state inSet states) && s.execution.isDefined }.
+        filter { case (r, s) => r.state inSet states }.
         map { case (r, s) => (s, r) }
 
-    provider.withDB(rootsInState.result).map(_.map(StepRunDao.tupled))
+    val query =
+      if (rootsOnly) {
+        rootsInState.filter { case (s, r) => r.id === r.root }
+      } else {
+        rootsInState.filter { case (s, r) => s.execution.isDefined }
+      }
+
+    provider.withDB(query.result).map(r => r.map(StepRunDao.tupled))
   }
 
   def findRelatedRuns(stepTreeId: StepTreeId): Future[Seq[RunDao]] = {

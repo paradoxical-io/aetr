@@ -34,6 +34,8 @@ class RunManager(val root: Run) {
   }
 
   def completeAll(result: Option[ResultData] = None): Unit = {
+    flatten.foreach(_.state = RunState.Complete)
+
     complete(root, result)
   }
 

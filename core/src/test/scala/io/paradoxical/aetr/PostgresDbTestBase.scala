@@ -126,12 +126,18 @@ class DbTests extends PostgresDbTestBase {
       m.completeAll()
 
       db.upsertRun(m.root).waitForResult()
+
+      assert(db.getRunTree(m.root.rootId).waitForResult().state == RunState.Complete)
     }
 
-    def pending(): List[Run] = {
-      val runs = db.findUnlockedRuns(RunState.Pending).flatMap(r => Future.sequence(r.map(db.getRunTree)))
+    def pending(): Seq[Run] = {
+      val runs = db.findRuns(List(RunState.Pending), rootsOnly = true).flatMap(r => {
+        Future.sequence(r.map(x => db.getRunTree(RootId(x.runDao.root.value))))
+      })
 
-      runs.waitForResult()
+      val x = runs.waitForResult()
+
+      x.toList
     }
 
     db.upsertRun(mgr1.root).waitForResult()
