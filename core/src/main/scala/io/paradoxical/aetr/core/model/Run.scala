@@ -12,7 +12,6 @@ case class Run(
   version: Version = Version(1),
   createdAt: Instant = Instant.now(),
   updatedAt: Instant = Instant.now(),
-  stateChangedAt: Instant = Instant.now(),
   var parent: Option[Run] = None,
   var state: RunState = RunState.Pending,
   input: Option[ResultData] = None,

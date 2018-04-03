@@ -23,9 +23,8 @@ class RunDaoManager @Inject()() {
           rootId = rootId,
           version = r.version,
           state = r.state,
-          output = r.result,
+          output = r.output,
           repr = steps(r.stepTreeId),
-          stateChangedAt = r.stateUpdatedAt,
           createdAt = r.createdAt,
           updatedAt = r.lastUpdatedAt
         )
@@ -62,10 +61,10 @@ class RunDaoManager @Inject()() {
         version = r.version,
         stepTreeId = r.repr.id,
         state = r.state,
-        result = r.output,
+        input = r.input,
+        output = r.output,
         createdAt = r.createdAt,
-        lastUpdatedAt = now,
-        stateUpdatedAt = now
+        lastUpdatedAt = now
       )
     })
   }

@@ -1,25 +1,34 @@
 package io.paradoxical.aetr
 
+import com.google.inject.Guice
 import com.twitter.finagle.http.Status.Ok
 import com.twitter.finatra.http.EmbeddedHttpServer
-import com.twitter.inject.server.FeatureTest
-import io.paradoxical.aetr.core.db.dao.StepDb
+import io.paradoxical.aetr.core.db.DbInitializer
 import io.paradoxical.aetr.core.server.AetrServer
-import io.paradoxical.aetr.core.server.modules.{Modules, PostgresModule}
-import io.paradoxical.aetr.db.MockStorageModule
-import io.paradoxical.aetr.db.TestModules._
-import org.scalatest.mockito.MockitoSugar
+import io.paradoxical.aetr.core.server.modules.Modules
+import io.paradoxical.aetr.db.PostgresDbTestBase
+import net.codingwell.scalaguice.InjectorExtensions._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ServiceTests extends FeatureTest with MockitoSugar {
-  val modules = Modules().ignore[PostgresModule].overlay(new MockStorageModule(mock[StepDb]))
+class ServiceTests extends PostgresDbTestBase {
+  val modules = Modules(config = Some(newDbAndConfig))
 
-  override val server = new EmbeddedHttpServer(new AetrServer(modules))
+  lazy val server = new EmbeddedHttpServer(new AetrServer(modules))
 
-  test("server#ping") {
+  "Server" should "ping" in {
     server.httpGet(
       path = "/ping",
       andExpect = Ok,
       withBody = "pong")
+  }
+
+  override protected def beforeAll(): Unit = {
+    Guice.createInjector(modules: _*).instance[DbInitializer].init()
+  }
+
+  override protected def afterAll(): Unit = {
+    server.close()
+
+    super.afterAll()
   }
 }

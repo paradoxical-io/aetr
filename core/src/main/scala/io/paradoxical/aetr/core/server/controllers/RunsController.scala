@@ -37,7 +37,7 @@ class RunsController @Inject()(
   getWithDoc("/api/v1/runs/partial/:id") {
     _.description("Get raw run id state. Only tracks the state of this instance,  not representative of the entire tree").request[GetRunRequest].responseWith[GetRunResult](status = 200)
   } { r: GetRunRequest =>
-    db.getRun(RunInstanceId(r.id)).map(dao => GetRunResult(state = dao.state, result = dao.result, dao.stepTreeId))
+    db.getRun(RunInstanceId(r.id)).map(dao => GetRunResult(state = dao.state, result = dao.output, dao.stepTreeId))
   }
 
   getWithDoc("/api/v1/runs/:id") {
@@ -56,7 +56,7 @@ class RunsController @Inject()(
         x.runDao.state,
         x.runDao.stepTreeId,
         x.stepTreeDao.name,
-        x.runDao.result
+        x.runDao.output
       )))
   }
 
@@ -70,7 +70,7 @@ class RunsController @Inject()(
         x.runDao.state,
         x.runDao.stepTreeId,
         x.stepTreeDao.name,
-        x.runDao.result
+        x.runDao.output
       )))
   }
 
@@ -78,7 +78,7 @@ class RunsController @Inject()(
     _.description("Get runs related to a step").request[GetRelatedRunsRequest].responseWith[GetRelatedRunsResult](status = 200)
   } { r: GetRelatedRunsRequest =>
     db.findRelatedRuns(r.id).
-      map(_.map(dao => GetRunResult(state = dao.state, result = dao.result, dao.stepTreeId))).
+      map(_.map(dao => GetRunResult(state = dao.state, result = dao.output, dao.stepTreeId))).
       map(GetRelatedRunsResult)
   }
 

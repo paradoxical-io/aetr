@@ -186,8 +186,8 @@ class StepDb @Inject()(
 
     val update = runs.updateWhere(
       r => r.id === id && r.version === version,
-      run => (run.version, run.state, run.result, run.lastUpdatedAt, run.stateUpdatedAt),
-      (version.inc(), state, result, now, now)
+      run => (run.version, run.state, run.output, run.lastUpdatedAt),
+      (version.inc(), state, result, now)
     )
 
     provider.withDB(update).map(updated => updated == 1)
