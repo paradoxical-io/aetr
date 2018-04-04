@@ -66,6 +66,8 @@ object BuildConfig {
         "-Xfuture"
       ),
 
+      fork in Test := true,
+
       scalacOptions in(Compile, doc) := scalacOptions.value.filterNot(_ == "-Xfatal-warnings"),
       scalacOptions in(Compile, doc) += "-no-java-comments"
     ) ++ Publishing.publishSettings

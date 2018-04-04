@@ -30,6 +30,16 @@ class DbTests extends PostgresDbTestBase {
     db.getStep(parent.id).waitForResult() shouldEqual parent
   }
 
+  it should "save mappers and reducers" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val parent = ParallelParent(name = NodeName("leaf1"), mapper = Mappers.Identity(), reducer = Reducers.Last())
+
+    db.upsertStep(parent).waitForResult()
+
+    db.getStep(parent.id).waitForResult() shouldEqual parent
+  }
+
   it should "rebuild children on change" in withDb { injector =>
     val db = injector.instance[StepDb]
 
