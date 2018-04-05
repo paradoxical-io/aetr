@@ -24,10 +24,10 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
     db.getStep(r.id).map(converters.fromStep)
   }
 
-  getWithDoc("/api/v1/steps/") {
+  getWithDoc("/api/v1/steps") {
     _.description("Get all step roots").responseWith[List[StepsRootDto]](status = 200)
   } { _: Request =>
-    db.getRootSteps().map(_.map(converters.fromStep)).map(_.map(item => {
+    db.getAllSteps().map(_.map(converters.fromStep)).map(_.map(item => {
       StepsRootDto(
         id = item.id,
         name = item.name,
@@ -36,12 +36,26 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
     }))
   }
 
-  putWithDoc("/api/v1/steps") {
-    _.description("Upsert steps").request[StepsSlimDto].responseWith[Unit](status = 200)
+  putWithDoc("/api/v1/steps/slim") {
+    _.description("Upsert slim steps").request[StepsSlimDto].responseWith[Unit](status = 200)
   } { r: StepsSlimDto =>
     converters.toStep(r).map(db.upsertStep)
   }
+
+  putWithDoc("/api/v1/steps") {
+    _.description("Upsert a step tree").request[StepsFatDto].responseWith[Unit](status = 200)
+  } { r: StepsFatDto =>
+    db.upsertStep(converters.toStep(r))
+  }
+
+  postWithDoc("/api/v1/steps/:id/children") {
+    _.description("Sets the children for the id").request[AddChildrenRequest].responseWith[Unit](status = 200)
+  } { r: AddChildrenRequest =>
+    db.setChildren(r.id, r.children)
+  }
 }
+
+case class AddChildrenRequest(@RouteParam id: StepTreeId, children: List[StepTreeId])
 
 case class GetStepsId(@RouteParam id: StepTreeId)
 
@@ -49,7 +63,6 @@ case class StepsSlimDto(
   id: StepTreeId,
   name: NodeName,
   stepType: StepType,
-  root: Option[StepTreeId],
   action: Option[Execution],
   children: Option[List[StepTreeId]]
 )
@@ -58,7 +71,6 @@ case class StepsFatDto(
   id: StepTreeId,
   name: NodeName,
   stepType: StepType,
-  root: Option[StepTreeId],
   action: Option[Execution],
   children: Option[List[StepsFatDto]]
 )

@@ -30,6 +30,26 @@ class DbTests extends PostgresDbTestBase {
     db.getStep(parent.id).waitForResult() shouldEqual parent
   }
 
+  it should "attach children and set roots" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1 = Action(name = NodeName("leaf1"))
+
+    val parent = SequentialParent(name = NodeName("parent"))
+
+    db.upsertStep(parent).waitForResult()
+
+    db.upsertStep(leaf1).waitForResult()
+
+    db.setChildren(parent.id, List(leaf1.id)).waitForResult()
+
+    db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children.map(_.id) shouldEqual List(leaf1.id)
+
+    db.setChildren(parent.id, Nil).waitForResult()
+
+    db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children shouldEqual Nil
+  }
+
   it should "save mappers and reducers" in withDb { injector =>
     val db = injector.instance[StepDb]
 

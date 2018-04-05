@@ -27,8 +27,8 @@ class StepDb @Inject()(
   import dataMappers._
   import provider.driver.api._
 
-  def getRootSteps(): Future[Seq[StepTree]] = {
-    val rootsQ = steps.query.filter(s => s.id === s.root || s.root.isEmpty)
+  def getAllSteps(): Future[Seq[StepTree]] = {
+    val rootsQ = steps.query
 
     provider.withDB {
       for {
@@ -84,6 +84,33 @@ class StepDb @Inject()(
       DBIO.seq(
         deleteExistingChildren,
         deleteTrees
+      ).transactionally
+    }
+  }
+
+  def getRoot(id: StepTreeId): Future[StepTreeId] = {
+    val rootQ = sql""" WITH RECURSIVE getRoot(idx, parent) AS (
+              SELECT 0, ${id}
+              UNION
+              SELECT getRoot.idx + 1, step_children.id FROM getRoot, step_children
+              WHERE step_children.child_id IN (getRoot.parent)
+            )
+            SELECT parent FROM getRoot ORDER BY idx DESC LIMIT 1""".as[StepTreeId]
+
+    provider.withDB(rootQ).map(_.head)
+  }
+
+  def setChildren(stepTreeId: StepTreeId, kidsToSet: List[StepTreeId]): Future[Unit] = {
+    val deleteExistingChildren = children.query.filter(_.id === stepTreeId).delete
+
+    val daos = StepTreeComposer.childrenToDao(stepTreeId, kidsToSet)
+
+    val reInsertNewChildren = children.query.forceInsertAll(daos)
+
+    provider.withDB {
+      DBIO.seq(
+        deleteExistingChildren,
+        reInsertNewChildren
       ).transactionally
     }
   }

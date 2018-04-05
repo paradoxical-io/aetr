@@ -30,27 +30,37 @@ class StepTreeComposer {
           SequentialParent(
             id = stepTreeDao.id,
             name = stepTreeDao.name,
-            root = stepTreeDao.root,
             children = childrenSteps
           )
         case StepType.Parallel =>
           ParallelParent(
             id = stepTreeDao.id,
             name = stepTreeDao.name,
-            root = stepTreeDao.root,
             children = childrenSteps
           )
         case StepType.Action =>
           Action(
             id = stepTreeDao.id,
             name = stepTreeDao.name,
-            root = stepTreeDao.root,
             execution = stepTreeDao.execution.getOrElse(NoOp())
           )
       }
     }
 
     bag.map(resolve)
+  }
+}
+
+object StepTreeComposer {
+  def childrenToDao(parent: StepTreeId, children: List[StepTreeId]): Seq[StepChildrenDao] = {
+    children.zipWithIndex.map {
+      case (child, order) =>
+        StepChildrenDao(
+          id = parent,
+          childOrder = order,
+          childId = child
+        )
+    }
   }
 }
 
@@ -69,14 +79,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
     flattened.flatMap(item => {
       item match {
         case p: Parent =>
-          p.children.zipWithIndex.map {
-            case (child, order) =>
-              StepChildrenDao(
-                id = p.id,
-                childOrder = order,
-                childId = child.id
-              )
-          }
+          StepTreeComposer.childrenToDao(p.id, p.children.map(_.id))
         case _: Action =>
           Nil
       }
@@ -93,7 +96,6 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Sequential,
-              root = p.root,
               execution = None
             )
           case p: ParallelParent =>
@@ -101,7 +103,6 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Parallel,
-              root = p.root,
               execution = None
             )
         }
@@ -110,7 +111,6 @@ class StepTreeDecomposer(stepTree: StepTree) {
           id = p.id,
           name = p.name,
           stepType = StepType.Action,
-          root = p.root,
           execution = Some(p.execution)
         )
     }
