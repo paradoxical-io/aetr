@@ -30,7 +30,7 @@ class DbTests extends PostgresDbTestBase {
     db.getStep(parent.id).waitForResult() shouldEqual parent
   }
 
-  it should "attach children and set roots" in withDb { injector =>
+  it should "attach children and detach children" in withDb { injector =>
     val db = injector.instance[StepDb]
 
     val leaf1 = Action(name = NodeName("leaf1"))
