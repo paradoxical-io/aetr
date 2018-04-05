@@ -2,15 +2,27 @@ package io.paradoxical.aetr.core.server
 
 import com.google.inject.Module
 import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.stats.{BroadcastStatsReceiver, LoadedStatsReceiver, StatsReceiver}
 import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
+import com.twitter.inject.TwitterModule
 import io.paradoxical.aetr.core.lifecycle.Startup
 import io.paradoxical.aetr.core.server.controllers.{PingController, RunsController, StepsController}
 import io.paradoxical.aetr.core.server.serialization.JsonModule
+import io.paradoxical.aetr.core.stats.FinagleStatsBridgeReceiver
 import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
 
 class AetrServer(override val modules: Seq[Module]) extends HttpServer with SwaggerDocs {
+  // Manually add the bridge receiver so we don't have to rely on service loading
+  override protected def statsReceiverModule: Module = new TwitterModule {
+    protected override def configure(): Unit = {
+      bindSingleton[StatsReceiver].toInstance(
+        BroadcastStatsReceiver(Seq(new FinagleStatsBridgeReceiver, LoadedStatsReceiver))
+      )
+    }
+  }
+
   override def defaultFinatraHttpPort = ":9999"
 
   override def documentation = new ApiDocumentationConfig {

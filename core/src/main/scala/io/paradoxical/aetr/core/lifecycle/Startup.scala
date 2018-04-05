@@ -1,10 +1,14 @@
 package io.paradoxical.aetr.core.lifecycle
 
+import com.codahale.metrics.ConsoleReporter
+import com.codahale.metrics.graphite.{GraphiteReporter, GraphiteUDP}
 import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.execution.{AdvanceQueuer, Advancer}
 import io.paradoxical.aetr.core.model.RunState
+import io.paradoxical.aetr.core.stats.FinagleStatsBridgeReceiver
 import io.paradoxical.common.extensions.Extensions._
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -22,6 +26,8 @@ class Startup @Inject()(
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def start(): Unit = {
+    setupMetrics()
+
     enqueuePending()
 
     startDequeueThread()
@@ -86,5 +92,29 @@ class Startup @Inject()(
     dequeueThread.setDaemon(true)
     dequeueThread.setName("Dequeue-thread")
     dequeueThread.start()
+  }
+
+  private def setupMetrics(): Unit = {
+    serviceConfig.stats.graphite.foreach(graphiteConfig => {
+      logger.info(s"Starting Graphite stats reporter: ${graphiteConfig.host}:${graphiteConfig.port}")
+
+      val sender = new GraphiteUDP(graphiteConfig.host, graphiteConfig.port)
+      val reporter = GraphiteReporter.
+        forRegistry(FinagleStatsBridgeReceiver.metrics).
+        convertRatesTo(TimeUnit.MILLISECONDS).
+        build(sender)
+      reporter.start(graphiteConfig.interval.toSeconds, TimeUnit.SECONDS)
+    })
+
+    if (serviceConfig.stats.print_to_console) {
+      logger.info("Starting console stats reporter")
+
+      val reporter = ConsoleReporter.
+        forRegistry(FinagleStatsBridgeReceiver.metrics).
+        convertRatesTo(TimeUnit.MILLISECONDS).
+        build()
+
+      reporter.start(5, TimeUnit.SECONDS)
+    }
   }
 }
