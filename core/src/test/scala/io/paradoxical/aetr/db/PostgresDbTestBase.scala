@@ -2,15 +2,17 @@ package io.paradoxical.aetr.db
 
 import com.google.inject.{Guice, Injector, Module}
 import com.twitter.inject.TwitterModule
+import com.zaxxer.hikari.HikariDataSource
 import io.paradoxical.aetr.TestBase
 import io.paradoxical.aetr.core.config.{ConfigLoader, ServiceConfig}
 import io.paradoxical.aetr.core.db.DbInitializer
 import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.server.modules.Modules
 import io.paradoxical.rdb.config.RdbCredentials
+import javax.sql.DataSource
 import net.codingwell.scalaguice.InjectorExtensions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random
+import scala.util.{Random, Try}
 
 class PostgresDbTestBase extends TestBase {
   val docker = Postgres.docker()
@@ -23,6 +25,8 @@ class PostgresDbTestBase extends TestBase {
     injector.instance[DbInitializer].init()
 
     test(injector)
+
+    Try(injector.instance[DataSource].asInstanceOf[HikariDataSource].close())
   }
 
   protected def newDbAndConfig: ServiceConfig = {

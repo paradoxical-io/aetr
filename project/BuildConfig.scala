@@ -23,6 +23,8 @@ object BuildConfig {
     val scalacheck = "1.13.4"
     val scalaGuice = "4.1.1"
     val postgres = "42.2.2"
+    val scalajhttp = "2.3.0"
+    val okhttp = "3.10.0"
   }
 
   object Dependencies {

@@ -1,4 +1,17 @@
 <configuration debug="false">
+  <appender name="STDOUT-PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
+    <encoder>
+      <pattern>%d [%X{traceId}] [%X{callerId}] [%thread] %-5level %logger{36} %marker - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="${log.level:-INFO}">
+    <appender-ref ref="STDOUT-PLAIN"/>
+  </root>
+
   <!-- DB Log (Rollover every 50MB, max 11 logs) -->
   <appender name="DB-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${log.db.output:-db.log}</file>

@@ -1,5 +1,6 @@
 package io.paradoxical.aetr.core.model
 
+import io.paradoxical.aetr.core.execution.RunToken
 import io.paradoxical.global.tiny.{LongValue, UuidValue}
 import java.time.Instant
 import java.util.UUID
@@ -18,6 +19,8 @@ case class Run(
   var output: Option[ResultData] = None
 ) {
   override def toString: String = repr.toString
+
+  val token: RunToken = RunToken(id, rootId)
 }
 
 trait RunId extends UuidValue with Product
