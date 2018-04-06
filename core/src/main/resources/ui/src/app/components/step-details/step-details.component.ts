@@ -15,7 +15,7 @@ export class StepDetailsComponent implements OnInit {
 
     step: Step;
 
-    stepTypes = StepType;
+    StepType = StepType;
 
     @ViewChild('tree') tree;
 
@@ -29,9 +29,15 @@ export class StepDetailsComponent implements OnInit {
 
     getOptions(): ITreeOptions {
         return {
-            idField: 'id',
+            idField: '_id',
             displayField: 'name',
-            childrenField: 'children'
+            childrenField: 'children',
+            allowDrag: (node) => {
+                return true;
+            },
+            allowDrop: (node, { parent, index }) => {
+               return parent.data.stepType != this.StepType.Action;
+            }
         }
     }
 

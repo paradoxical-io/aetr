@@ -63,7 +63,7 @@ export enum ExecutionType {
 }
 
 export enum StepType {
-    Sequential,
-    Parallel,
-    Action
+    Sequential = "Sequential",
+    Parallel = "Parallel",
+    Action = "Action"
 }
