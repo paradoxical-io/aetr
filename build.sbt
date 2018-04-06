@@ -46,11 +46,12 @@ lazy val core = project.settings(commonSettings).settings(
       "org.slf4j" % "jul-to-slf4j" % versions.julSlf4j,
       "org.slf4j" % "jcl-over-slf4j" % versions.julSlf4j,
       "org.codehaus.janino" % "janino" % versions.janino,
-      "org.scalaj" %% "scalaj-http" % "2.3.0",
+      "org.scalaj" %% "scalaj-http" % versions.scalajhttp,
       "ch.qos.logback" % "logback-classic" % versions.logback % "test",
       "io.paradoxical" % "docker-client" % versions.paradox.docker % "test",
       "com.google.inject.extensions" % "guice-testlib" % versions.guice % "test",
-      "io.paradoxical" %% "finatra-test" % versions.paradox.finatra % "test"
+      "io.paradoxical" %% "finatra-test" % versions.paradox.finatra % "test",
+      "com.squareup.okhttp3" % "mockwebserver" % versions.okhttp % "test"
     ) ++ Dependencies.testDeps
   )
 ).dependsOn().
