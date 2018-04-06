@@ -1,5 +1,6 @@
 package io.paradoxical.aetr
 
+import io.paradoxical.aetr.core.config.ConfigLoader
 import io.paradoxical.aetr.core.db.StepsDbSync
 import io.paradoxical.aetr.core.execution.{ArbitraryStringExecutionResult, ExecutionHandler}
 import io.paradoxical.aetr.core.execution.api.UrlExecutorImpl
@@ -13,6 +14,7 @@ import org.scalatest.{Assertions, FlatSpec, Inside}
 import scala.util.Success
 
 class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with Inside {
+  private val config = ConfigLoader.load()
 
   "UrlExecutor" should "make requests with a run token" in withTestServer {
     case TestServerContext(server, url) =>
@@ -26,7 +28,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val run = new RunManager(tree).root
 
-      val exec = new UrlExecutorImpl
+      val exec = new UrlExecutorImpl(config)
 
       val result = new ExecutionHandler(mockdb, exec).execute(Actionable(run, tree, None))
 
@@ -34,7 +36,8 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val recordedRequest = server.takeRequest()
 
-      assert(recordedRequest.getPath == s"/execute?aetr=${run.token.asRaw}")
+      val expectedPath = s"/execute?aetr=${config.meta.host}/api/v1/complete/${run.token.asRaw}"
+      assert(recordedRequest.getPath === expectedPath)
       inside(result) {
         case Success(ArbitraryStringExecutionResult(responseBody)) =>
           assert(responseBody === expectedResponseBody)
@@ -61,7 +64,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val run = new RunManager(tree)
 
-      val exec = new UrlExecutorImpl
+      val exec = new UrlExecutorImpl(config)
 
       val action1 = run.next().head
 
@@ -85,12 +88,13 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val recordedRequest1 = server.takeRequest()
 
-      assert(recordedRequest1.getPath === s"/execute?q=1,2&q2=hello&aetr=${action1.run.token.asRaw}")
+      val expectedAetrCallbackFmt = s"${config.meta.host}/api/v1/complete/"
+      assert(recordedRequest1.getPath === s"/execute?q=1,2&q2=hello&aetr=$expectedAetrCallbackFmt${action1.run.token.asRaw}")
       assert(recordedRequest1.getBody.size() === 0L)
 
       val recordedRequest2 = server.takeRequest()
 
-      assert(recordedRequest2.getPath === s"/execute?q=1,2&q2=hello&aetr=${action2.run.token.asRaw}")
+      assert(recordedRequest2.getPath === s"/execute?q=1,2&q2=hello&aetr=$expectedAetrCallbackFmt${action2.run.token.asRaw}")
       assert(action2.previousResult.get.value === new String(recordedRequest2.getBody.snapshot().toByteArray))
   }
 

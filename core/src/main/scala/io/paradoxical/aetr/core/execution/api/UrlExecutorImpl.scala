@@ -1,12 +1,16 @@
 package io.paradoxical.aetr.core.execution.api
 
+import io.paradoxical.aetr.core.config.ServiceConfig
 import io.paradoxical.aetr.core.execution.{ArbitraryStringExecutionResult, ExecutionResult, RunToken}
 import io.paradoxical.aetr.core.model.ResultData
 import java.net.URL
+import javax.inject.Inject
 import scalaj.http.Http
 import scala.util.Try
 
-class UrlExecutorImpl extends UrlExecutor {
+class UrlExecutorImpl @Inject()(
+  config: ServiceConfig
+) extends UrlExecutor {
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   override def execute(token: RunToken, url: URL, data: Option[ResultData]): Try[ExecutionResult] = {
@@ -53,8 +57,13 @@ class UrlExecutorImpl extends UrlExecutor {
   }
 
   private def buildQueryString(queryMap: Map[String, List[String]], runToken: RunToken): String = {
-    "?" + (queryMap + (("aetr", runToken.asRaw :: Nil))).
+    "?" + (queryMap + (("aetr", generateCallbackParam(runToken) :: Nil))).
       map { case (k, v) => s"$k=${v.mkString(",")}" }.
       reduceLeft(_ + "&" + _)
+  }
+
+  private def generateCallbackParam(runToken: RunToken): String = {
+    val path = config.meta.complete_callback_path.replaceAll(":token", runToken.asRaw)
+    s"${config.meta.host}$path"
   }
 }
