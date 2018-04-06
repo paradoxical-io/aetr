@@ -9,21 +9,27 @@ export class ApiService {
     constructor(private http: HttpClient) {
     }
 
-    listSteps(): Observable<StepRoot[]> {
-        return this.http.get<StepRoot[]>("/api/v1/steps")
+    listSteps(): Observable<Step[]> {
+        return this.http.get<Step[]>("/api/v1/steps")
     }
 
-    getStepTree(id: string): Observable<Step> {
+    getStep(id: string): Observable<Step> {
         return this.http.get<Step>(`/api/v1/steps/${id}`)
     }
 
     upsertStep(step: Step): Observable<void> {
-        return this.http.put<Step>(`api/v1/steps`, step).map(x => null)
+        return this.http.put<Step>(`api/v1/steps/slim`, {
+            id: step.id,
+            name: step.name,
+            stepType: step.stepType,
+            action: step.action,
+            children: step.children.map(c => c.id)
+        }).map(x => null)
     }
 
     setChildren(id: string, children: string[]): Observable<void> {
         return this.http.post<string[]>(`api/v1/steps/${id}/children`, {
-            "children": children
+            children: children
         }).map(x => null)
     }
 }

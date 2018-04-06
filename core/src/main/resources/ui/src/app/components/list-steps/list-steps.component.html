@@ -1,5 +1,9 @@
-<p>
-  list-steps works!
-</p>
+<div class="container">
+    <button class="button btn-primary" [routerLink]="['/steps/new']">New Step</button>
 
-<button class="button btn-primary" [routerLink]="['/steps/new']">New Step</button>
+    <ul *ngFor="let step of steps" class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
+        </li>
+    </ul>
+</div>

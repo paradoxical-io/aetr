@@ -10,9 +10,17 @@ import {CreateStepComponent} from './components/create-step/create-step.componen
 import {CreateRunComponent} from './components/create-run/create-run.component';
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
+import { StepDetailsComponent } from './components/step-details/step-details.component';
+import {TreeModule} from "angular-tree-component";
+import { SequentialComponent } from './components/step-types/sequential/sequential.component';
+import { ParallelComponent } from './components/step-types/parallel/parallel.component';
+import { ActionComponent } from './components/step-types/action/action.component';
+import { ApiComponent } from './components/step-types/action/api/api.component';
+import { HeaderComponent } from './components/header/header.component';
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
+    {path: 'steps/details/:id', component: StepDetailsComponent},
     {path: 'runs/new', component: CreateRunComponent},
     {path: 'runs/list', component: ListRunsComponent},
     {path: 'steps/list', component: ListStepsComponent},
@@ -29,11 +37,18 @@ const appRoutes: Routes = [
         ListStepsComponent,
         ListRunsComponent,
         CreateStepComponent,
-        CreateRunComponent
+        CreateRunComponent,
+        StepDetailsComponent,
+        SequentialComponent,
+        ParallelComponent,
+        ActionComponent,
+        ApiComponent,
+        HeaderComponent
     ],
     imports: [
         RouterModule.forRoot(appRoutes),
         HttpClientModule,
+        TreeModule,
         FormsModule,
         BrowserModule
     ],

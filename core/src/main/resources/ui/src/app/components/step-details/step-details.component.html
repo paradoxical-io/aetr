@@ -1,0 +1,11 @@
+<div class="container">
+    <tree-root #tree [nodes]="getNodes()" [options]="getOptions()">
+        <ng-template #treeNodeTemplate let-node let-index="index">
+            <div [ngSwitch]="node.data.stepType">
+                <app-sequential *ngSwitchCase="'Sequential'" [data]="node.data"></app-sequential>
+                <app-parallel *ngSwitchCase="'Parallel'" [data]="node.data"></app-parallel>
+                <app-action *ngSwitchCase="'Action'" [data]="node.data"></app-action>
+            </div>
+        </ng-template>
+    </tree-root>
+</div>
