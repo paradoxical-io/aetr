@@ -17,6 +17,7 @@ import { ParallelComponent } from './components/step-types/parallel/parallel.com
 import { ActionComponent } from './components/step-types/action/action.component';
 import { ApiComponent } from './components/step-types/action/api/api.component';
 import { HeaderComponent } from './components/header/header.component';
+import {OrderModule} from "ngx-order-pipe";
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
@@ -50,7 +51,8 @@ const appRoutes: Routes = [
         HttpClientModule,
         TreeModule,
         FormsModule,
-        BrowserModule
+        BrowserModule,
+        OrderModule
     ],
     providers: [ApiService],
     bootstrap: [AppComponent]

@@ -1,9 +1,15 @@
-<div class="container">
-    <button class="button btn-primary" [routerLink]="['/steps/new']">New Step</button>
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 hidden-xs-down bg-light sidebar">
+            <button class="button btn-primary" [routerLink]="['/steps/new']">New Step</button>
+        </nav>
 
-    <ul *ngFor="let step of steps" class="list-group">
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
-        </li>
-    </ul>
+        <main class="col-sm-9">
+            <ul *ngFor="let step of steps | orderBy : 'name'" class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
+                </li>
+            </ul>
+        </main>
+    </div>
 </div>
