@@ -21,9 +21,13 @@
                 </div>
 
                 <div class="form-group" dnd-sortable-container [sortableData]="step.children" [dropZones]="['child-dropZone']">
+                    <div *ngIf="step.children.length == 0">
+                        Drag children here...
+                    </div>
                     <ul class="list-group">
                         <li *ngFor="let child of step.children; let x = index" class="list-group-item"
                             dnd-sortable [sortableIndex]="x"
+                            (onDropSuccess)="reAddToAll($event)"
                             [dragData]="child"
                             [dragEnabled]="true">
                             {{child.name}}
