@@ -1,3 +1,39 @@
-<p>
-  create-step works!
-</p>
+<div class="container">
+    <form class="needs-validation" novalidate>
+        <div class="form-group">
+            <label for="stepName">Step Name</label>
+            <input type="text" class="form-control"
+                   id="stepName"
+                   placeholder="Your Step"
+                   [(ngModel)]="stepName"
+                   name="stepName"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="stepType">Step Type</label>
+            <select class="form-control" id="stepType" [(ngModel)]="stepType" name="stepType" required>
+                <option value="{{StepType.Parallel}}">Parallel</option>
+                <option value="{{StepType.Sequential}}">Sequential</option>
+                <option value="{{StepType.Action}}">Action</option>
+            </select>
+        </div>
+
+        <div [ngSwitch]="stepType">
+            <div *ngSwitchCase="StepType.Action">
+                <div class="form-group">
+                    <label for="url">URL</label>
+                    <input type="text"
+                           class="form-control"
+                           id="url"
+                           placeholder="http://"
+                           [(ngModel)]="action.url" name="action"
+                           required
+                    >
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit" (click)="submit()">Create</button>
+    </form>
+</div>

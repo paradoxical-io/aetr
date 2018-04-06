@@ -10,6 +10,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit executionContext: ExecutionContext) extends Framework.RestApi {
+
   import DtoConvertors._
 
   getWithDoc[GetStepsId, Future[StepsSlimDto]]("/api/v1/steps/:id/slim") {
@@ -36,6 +37,21 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
     }))
   }
 
+  postWithDoc("/api/v1/steps") {
+    _.description("Create a new step node").request[StepsSlimDto].responseWith[CreateStepResponse](status = 200)
+  } { r: CreateStepRequest =>
+
+    val slim = StepsSlimDto(
+      id = StepTreeId.next,
+      name = r.name,
+      stepType = r.stepType,
+      action = r.action,
+      children = r.children
+    )
+
+    converters.toStep(slim).map(db.upsertStep).map(_ => CreateStepResponse(slim.id))
+  }
+
   putWithDoc("/api/v1/steps/slim") {
     _.description("Upsert slim steps").request[StepsSlimDto].responseWith[Unit](status = 200)
   } { r: StepsSlimDto =>
@@ -58,6 +74,15 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
 case class AddChildrenRequest(@RouteParam id: StepTreeId, children: List[StepTreeId])
 
 case class GetStepsId(@RouteParam id: StepTreeId)
+
+case class CreateStepResponse(id: StepTreeId)
+
+case class CreateStepRequest(
+  name: NodeName,
+  stepType: StepType,
+  action: Option[Execution],
+  children: Option[List[StepTreeId]]
+)
 
 case class StepsSlimDto(
   id: StepTreeId,

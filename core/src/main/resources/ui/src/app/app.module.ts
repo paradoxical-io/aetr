@@ -18,6 +18,7 @@ import { ActionComponent } from './components/step-types/action/action.component
 import { ApiComponent } from './components/step-types/action/api/api.component';
 import { HeaderComponent } from './components/header/header.component';
 import {OrderModule} from "ngx-order-pipe";
+import { ParentComponent } from './components/steps/edit/parent/parent.component';
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
@@ -44,7 +45,8 @@ const appRoutes: Routes = [
         ParallelComponent,
         ActionComponent,
         ApiComponent,
-        HeaderComponent
+        HeaderComponent,
+        ParentComponent
     ],
     imports: [
         RouterModule.forRoot(appRoutes),

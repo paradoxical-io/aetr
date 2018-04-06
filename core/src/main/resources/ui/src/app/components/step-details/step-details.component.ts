@@ -33,10 +33,10 @@ export class StepDetailsComponent implements OnInit {
             displayField: 'name',
             childrenField: 'children',
             allowDrag: (node) => {
-                return true;
+                return false;
             },
             allowDrop: (node, { parent, index }) => {
-               return parent.data.stepType != this.StepType.Action;
+               return false;
             }
         }
     }

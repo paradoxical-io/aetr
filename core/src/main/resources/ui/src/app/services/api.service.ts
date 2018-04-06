@@ -17,7 +17,11 @@ export class ApiService {
         return this.http.get<Step>(`/api/v1/steps/${id}`)
     }
 
-    upsertStep(step: Step): Observable<void> {
+    insertStep(request: CreateStepRequest): Observable<CreateStepResponse> {
+        return this.http.post<CreateStepResponse>(`api/v1/steps`, request)
+    }
+
+    updateStep(step: Step): Observable<void> {
         return this.http.put<Step>(`api/v1/steps/slim`, {
             id: step.id,
             name: step.name,
@@ -34,6 +38,17 @@ export class ApiService {
     }
 }
 
+export class CreateStepRequest {
+    name: string;
+    stepType: StepType;
+    action: Execution;
+    children: string[];
+}
+
+export class CreateStepResponse {
+    id: string
+}
+
 export class StepRoot {
     id: string;
     name: string;
@@ -44,7 +59,6 @@ export class Step {
     id: string;
     name: string;
     stepType: StepType;
-    root: Step;
     action: Execution;
     children: Step[];
 }
@@ -59,7 +73,7 @@ export class ApiExecution implements Execution {
 }
 
 export enum ExecutionType {
-    api
+    api = "api"
 }
 
 export enum StepType {
