@@ -1,3 +1,6 @@
 <div [ngSwitch]="data.action.type">
     <app-api [data]="data" *ngSwitchCase="'api'"></app-api>
+    <div class="container" *ngSwitchCase="'no-op'">
+        {{data.name}} - NoOp
+    </div>
 </div>

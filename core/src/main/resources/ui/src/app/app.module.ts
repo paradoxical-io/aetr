@@ -9,7 +9,7 @@ import {ListRunsComponent} from './components/list-runs/list-runs.component';
 import {CreateStepComponent} from './components/create-step/create-step.component';
 import {CreateRunComponent} from './components/create-run/create-run.component';
 import {HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { StepDetailsComponent } from './components/step-details/step-details.component';
 import {TreeModule} from "angular-tree-component";
 import { SequentialComponent } from './components/step-types/sequential/sequential.component';
@@ -18,11 +18,13 @@ import { ActionComponent } from './components/step-types/action/action.component
 import { ApiComponent } from './components/step-types/action/api/api.component';
 import { HeaderComponent } from './components/header/header.component';
 import {OrderModule} from "ngx-order-pipe";
-import { ParentComponent } from './components/steps/edit/parent/parent.component';
+import { EditStepParentComponent } from './components/steps/edit/parent/parent.component';
+import {DndModule} from "ng2-dnd";
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
     {path: 'steps/details/:id', component: StepDetailsComponent},
+    {path: 'steps/edit/parent/:id', component: EditStepParentComponent},
     {path: 'runs/new', component: CreateRunComponent},
     {path: 'runs/list', component: ListRunsComponent},
     {path: 'steps/list', component: ListStepsComponent},
@@ -46,13 +48,15 @@ const appRoutes: Routes = [
         ActionComponent,
         ApiComponent,
         HeaderComponent,
-        ParentComponent
+        EditStepParentComponent
     ],
     imports: [
         RouterModule.forRoot(appRoutes),
+        DndModule.forRoot(),
         HttpClientModule,
         TreeModule,
         FormsModule,
+        ReactiveFormsModule,
         BrowserModule,
         OrderModule
     ],

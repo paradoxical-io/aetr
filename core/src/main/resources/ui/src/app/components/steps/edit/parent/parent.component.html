@@ -1,3 +1,53 @@
-<p>
-  parent works!
-</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">
+            <form class="needs-validation" novalidate>
+                <div class="form-group">
+                    <label for="stepName">Step Name</label>
+                    <input type="text" class="form-control"
+                           id="stepName"
+                           placeholder="Your Step"
+                           [(ngModel)]="step.name"
+                           name="stepName"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="stepType">Step Type</label>
+                    <select class="form-control" id="stepType" [(ngModel)]="step.stepType" name="stepType" required>
+                        <option [selected]="step.stepType == StepType.Parallel">{{StepType.Parallel}}</option>
+                        <option [selected]="step.stepType == StepType.Sequential">{{StepType.Sequential}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group" dnd-sortable-container [sortableData]="step.children" [dropZones]="['child-dropZone']">
+                    <ul class="list-group">
+                        <li *ngFor="let child of step.children; let x = index" class="list-group-item"
+                            dnd-sortable [sortableIndex]="x"
+                            [dragData]="child"
+                            [dragEnabled]="true">
+                            {{child.name}}
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="btn btn-primary" type="submit" (click)="save()">Save</button>
+            </form>
+        </div>
+
+        <div class="col-sm3">
+            Available steps:
+
+            <div class="panel-body" dnd-sortable-container [sortableData]="allSteps" [dropZones]="['child-dropZone']">
+                <ul class="list-group">
+                    <li *ngFor="let s of allSteps; let i = index" class="list-group-item"
+                        dnd-sortable [sortableIndex]="i"
+                        [dragData]="s"
+                        [dragEnabled]="true">
+                        {{s.name}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

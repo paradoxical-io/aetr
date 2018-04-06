@@ -1,15 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
+import {Step} from "../../../../services/api.service";
 
 @Component({
-  selector: 'app-action',
-  templateUrl: './action.component.html',
-  styleUrls: ['./action.component.css']
+    selector: 'app-action',
+    templateUrl: './action.component.html',
+    styleUrls: ['./action.component.css']
 })
-export class ActionComponent implements OnInit {
+export class EditStepActionComponent implements OnInit {
 
-  constructor() { }
+    @Input() step: Step;
 
-  ngOnInit() {
-  }
+    constructor() {
+    }
+
+    ngOnInit() {
+    }
 
 }
