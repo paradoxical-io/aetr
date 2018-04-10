@@ -1,7 +1,8 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
-import {ApiService, Step, StepRoot, StepType} from "../../services/api.service";
+import {ApiService} from "../../services/api.service";
 import {ITreeOptions} from "angular-tree-component";
+import {Step, StepRoot, StepType} from "../../model/model";
 
 @Component({
     selector: 'app-step-details',

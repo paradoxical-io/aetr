@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {ApiExecution, Step} from "../../../../services/api.service";
+import {Step, ApiExecution} from "../../../../model/model";
 
 @Component({
     selector: 'app-api',

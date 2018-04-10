@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {ApiService, Step, StepRoot} from "../../services/api.service";
+import {ApiService} from "../../services/api.service";
+import {Step, StepRoot} from "../../model/model";
 
 @Component({
     selector: 'app-list-steps',
@@ -17,7 +18,7 @@ export class ListStepsComponent implements OnInit {
 
     errorText: string = "";
 
-    selectedRelatedParents: StepRoot[] = []
+    selectedRelatedParents: StepRoot[] = [];
 
     ngOnInit() {
         this.loadData()

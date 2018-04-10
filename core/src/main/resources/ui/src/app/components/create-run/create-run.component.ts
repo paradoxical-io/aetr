@@ -1,15 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {ApiService} from "../../services/api.service";
+import {ActivatedRoute} from "@angular/router";
+import {Step} from "../../model/model";
 
 @Component({
-  selector: 'app-create-run',
-  templateUrl: './create-run.component.html',
-  styleUrls: ['./create-run.component.css']
+    selector: 'app-create-run',
+    templateUrl: './create-run.component.html',
+    styleUrls: ['./create-run.component.css']
 })
 export class CreateRunComponent implements OnInit {
 
-  constructor() { }
+    constructor(private route: ActivatedRoute, private api: ApiService) {
+    }
 
-  ngOnInit() {
-  }
+    step: Step;
 
+    ngOnInit() {
+        this.route.paramMap.subscribe(x => {
+            let stepId = x.get('id');
+
+            this.api.getStep(stepId).subscribe(s => {
+                this.step = s;
+            })
+        })
+    }
 }

@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs/Observable";
 import 'rxjs/add/operator/map'
+import {CreateRunResult, CreateStepRequest, CreateStepResponse, GetRelatedRunsResult, RunData, Step, StepRoot} from "../model/model";
 
 @Injectable()
 export class ApiService {
@@ -29,6 +30,16 @@ export class ApiService {
         return this.http.get<StepRoot[]>(`api/v1/steps/${id}/parents`)
     }
 
+    createRun(stepId: string, data: string): Observable<string> {
+        return this.http.post<CreateRunResult>(`api/v1/runs/step/${stepId}`, {
+            input: data
+        }).map(x => x.id)
+    }
+
+    listRelatedRuns(stepId: string): Observable<RunData[]> {
+        return this.http.get<GetRelatedRunsResult>(`/api/v1/runs/related/step/${stepId}`).map(x => x.runs)
+    }
+
     updateStep(step: Step): Observable<void> {
         return this.http.put<Step>(`api/v1/steps/slim`, {
             id: step.id,
@@ -46,46 +57,3 @@ export class ApiService {
     }
 }
 
-export class CreateStepRequest {
-    name: string;
-    stepType: StepType;
-    action: Execution;
-    children: string[];
-}
-
-export class CreateStepResponse {
-    id: string
-}
-
-export class StepRoot {
-    id: string;
-    name: string;
-    stepType: StepType;
-}
-
-export class Step {
-    id: string;
-    name: string;
-    stepType: StepType;
-    action: Execution;
-    children: Step[];
-}
-
-export interface Execution {
-    type: ExecutionType
-}
-
-export class ApiExecution implements Execution {
-    type: ExecutionType = ExecutionType.api;
-    url: string;
-}
-
-export enum ExecutionType {
-    api = "api"
-}
-
-export enum StepType {
-    Sequential = "Sequential",
-    Parallel = "Parallel",
-    Action = "Action"
-}

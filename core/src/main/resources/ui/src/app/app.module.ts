@@ -25,7 +25,7 @@ const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
     {path: 'steps/details/:id', component: StepDetailsComponent},
     {path: 'steps/edit/parent/:id', component: EditStepParentComponent},
-    {path: 'runs/new', component: CreateRunComponent},
+    {path: 'runs/new/steps/:id', component: CreateRunComponent},
     {path: 'runs/list', component: ListRunsComponent},
     {path: 'steps/list', component: ListStepsComponent},
     {

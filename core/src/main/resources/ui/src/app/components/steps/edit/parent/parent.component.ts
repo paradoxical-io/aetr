@@ -1,7 +1,8 @@
 import {Component, OnInit} from '@angular/core';
-import {ApiService, Step, StepType} from "../../../../services/api.service";
+import {ApiService} from "../../../../services/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
+import {Step, StepType} from "../../../../model/model";
 
 @Component({
     selector: 'app-parent',

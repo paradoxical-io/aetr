@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {ApiService, CreateStepRequest, Execution, ExecutionType, StepType} from "../../services/api.service";
+import {ApiService} from "../../services/api.service";
 import {Router} from "@angular/router";
+import {CreateStepRequest, Execution, ExecutionType, StepType} from "../../model/model";
 
 @Component({
     selector: 'app-create-step',
