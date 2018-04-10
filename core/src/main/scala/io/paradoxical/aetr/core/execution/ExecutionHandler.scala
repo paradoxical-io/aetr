@@ -12,24 +12,31 @@ class ExecutionHandler @Inject()(storage: StepsDbSync, urlExecutor: UrlExecutor)
   def execute(actionable: Actionable): Try[ExecutionResult] = {
     val root = storage.getRunTree(actionable.run.rootId)
 
-    try {
-      val runToken = createRunToken(actionable.run)
+    val runToken = createRunToken(actionable.run)
 
-      logger.info(s"Executing $actionable with runtoken $runToken")
+    logger.info(s"Executing $actionable with runtoken $runToken")
 
-      val result = actionable.action.execution match {
-        case ApiExecution(url) =>
-          urlExecutor.execute(runToken, url, actionable.previousResult).
-            map(result => (result, RunState.Executing))
-        case NoOp() =>
-          Success((EmptyExecutionResult, RunState.Complete))
-
-      val resultState = result.map(_._2).getOrElse(RunState.Error)
-
-      storage.trySetRunState(actionable.run.id, root, resultState)
-
-      result.map(_._1)
+    val result = actionable.action.execution match {
+      case ApiExecution(url) =>
+        urlExecutor.
+          execute(runToken, url, actionable.previousResult).
+          map(result => ExecutionResultState(Some(result), RunState.Executing))
+      case NoOp() =>
+        Success(ExecutionResultState(result = None, RunState.Complete))
     }
+
+    val resultState = result.map(_.state).getOrElse(RunState.Error)
+
+    try {
+      storage.trySetRunState(actionable.run.id, root, resultState)
+    } catch {
+      case e: Exception =>
+        logger.error(s"Unable to set run state for $actionable to $resultState")
+
+        throw e
+    }
+
+    result.map(_.result.getOrElse(EmptyExecutionResult))
   }
 
   private def createRunToken(run: Run): RunToken = {
@@ -41,3 +48,5 @@ trait ExecutionResult
 case object EmptyExecutionResult extends ExecutionResult
 case class ArbitraryStringExecutionResult(content: String) extends ExecutionResult
 
+
+case class ExecutionResultState(result: Option[ExecutionResult], state: RunState)

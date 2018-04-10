@@ -115,22 +115,19 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
     val action1: Action = Action(
       id = StepTreeId.next,
       name = NodeName("action1"),
-      root = Some(rootId),
       mapper = Mappers.Function(res => ResultData(res.value + "_mapped")),
     )
 
     val action2 = Action(
       id = StepTreeId.next,
-      name = NodeName("action2"),
-      root = Some(rootId)
+      name = NodeName("action2")
     )
 
     val actionSeq = Seq(action1, action2)
 
     val sequentialParent = SequentialParent(
       name = NodeName("SequentialParent"),
-      id = StepTreeId.next,
-      root = Some(rootId)
+      id = StepTreeId.next
     )
 
     val treeRoot = SequentialParent(name = NodeName("root"), id = rootId)
