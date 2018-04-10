@@ -3,6 +3,7 @@ import {ApiService} from "../../../../services/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
 import {Step, StepType} from "../../../../model/model";
+import {forkJoin} from "rxjs/observable/forkJoin";
 
 @Component({
     selector: 'app-parent',
@@ -11,12 +12,10 @@ import {Step, StepType} from "../../../../model/model";
 })
 export class EditStepParentComponent implements OnInit {
 
-    constructor(
-        private api: ApiService,
-        private route: ActivatedRoute,
-        private router: Router,
-        private location: Location
-    ) {
+    constructor(private api: ApiService,
+                private route: ActivatedRoute,
+                private router: Router,
+                private location: Location) {
     }
 
     step: Step;
@@ -34,15 +33,16 @@ export class EditStepParentComponent implements OnInit {
         this.route.paramMap.subscribe(x => {
             let stepId = x.get('id');
 
-            this.api.getStep(stepId).subscribe(s => {
-                this.api.listSteps().subscribe(st => {
-                    this.allSteps = st;
-                    this.step = s;
+            let getStep = this.api.getStep(stepId);
+            let getAllSteps = this.api.listSteps();
 
-                    this.sortSteps();
+            forkJoin([getStep, getAllSteps]).subscribe(s => {
+                this.step = s[0];
+                this.allSteps = s[1];
 
-                    this.resyncSteps();
-                })
+                this.sortSteps();
+
+                this.resyncSteps();
             })
         })
     }

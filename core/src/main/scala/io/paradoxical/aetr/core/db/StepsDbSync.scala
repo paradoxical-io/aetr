@@ -1,12 +1,14 @@
 package io.paradoxical.aetr.core.db
 
 import io.paradoxical.aetr.core.db.dao.StepDb
+import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.common.extensions.Extensions._
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-class StepsDbSync @Inject()(stepDb: StepDb) {
+class StepsDbSync @Inject()(stepDb: StepDb)(implicit executionContext: ExecutionContext) {
   def upsertSteps(stepTree: StepTree): Unit = {
     stepDb.upsertStep(stepTree).waitForResult()
   }
@@ -45,12 +47,19 @@ class StepsDbSync @Inject()(stepDb: StepDb) {
   }
 
   def trySetRunState(
-    id: RunInstanceId,
-    version: Version,
+    run: Run,
     state: RunState,
     result: Option[ResultData] = None
   ): Boolean = {
-    stepDb.setRunState(id, version, state, result).waitForResult()
+    stepDb.getRunTree(run.rootId).flatMap(root => {
+      val manager = new RunManager(root)
+
+      manager.setState(run.id, state, result.map(Some(_)))
+
+      stepDb.upsertRun(manager.root).map(_ => true).recover {
+        case _ => false
+      }
+    }).waitForResult()
   }
 
   /**

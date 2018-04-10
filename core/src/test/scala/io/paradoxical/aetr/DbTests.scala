@@ -235,7 +235,7 @@ class DbTests extends PostgresDbTestBase {
       db.tryLock(run.rootId)(r => {
         action
 
-        db.trySetRunState(r.id, r.version, state)
+        db.trySetRunState(r, state)
       }).getOrElse(false)
     }
 

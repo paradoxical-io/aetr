@@ -1,8 +1,9 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {ApiService} from "../../services/api.service";
+import {forkJoin} from "rxjs/observable/forkJoin";
 import {ITreeOptions} from "angular-tree-component";
-import {Step, StepRoot, StepType} from "../../model/model";
+import {RunData, Step, StepRoot, StepType} from "../../model/model";
 
 @Component({
     selector: 'app-step-details',
@@ -21,6 +22,8 @@ export class StepDetailsComponent implements OnInit {
     selectedStep: Step = undefined;
 
     relatedParents: StepRoot[];
+
+    relatedRuns: RunData[];
 
     @ViewChild('tree') tree;
 
@@ -62,12 +65,15 @@ export class StepDetailsComponent implements OnInit {
         this.route.paramMap.subscribe(x => {
             let stepId = x.get('id');
 
-            this.api.getStepParents(stepId).subscribe(parents => {
-                this.api.getStep(stepId).subscribe(s => {
-                    this.step = s;
-                    this.relatedParents = parents;
-                    this.tree.treeModel.update();
-                })
+            let getParents = this.api.getStepParents(stepId);
+            let getRuns = this.api.listRelatedRuns(stepId);
+            let getSTep = this.api.getStep(stepId);
+
+            forkJoin([getParents, getRuns, getSTep]).subscribe(results => {
+                this.relatedParents = results[0];
+                this.relatedRuns = results[1];
+                this.step = results[2];
+                this.tree.treeModel.update();
             })
         })
     }
