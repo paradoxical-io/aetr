@@ -15,9 +15,12 @@
                     <h4>Recent runs</h4>
                 </li>
 
-                <ul *ngFor="let run of relatedRuns">
+                <ul *ngFor="let run of relatedRuns | orderBy: 'date'">
                     <li>
-                        <span class="link" [routerLink]="['/runs/details/', run.id]">{{run.state}}</span>
+                        <div class="container">
+                            <span class="link" [routerLink]="['/runs/details/', run.id]">{{run.createdAt | date: 'full'}}</span>
+                            {{run.state}}
+                        </div>
                     </li>
                 </ul>
             </ul>

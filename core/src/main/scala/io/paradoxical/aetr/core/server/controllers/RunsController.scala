@@ -42,6 +42,7 @@ class RunsController @Inject()(
     db.getRunInstance(RunInstanceId(r.id)).map(dao => RunSlimResult(
       id = dao.id,
       state = dao.state,
+      createdAt = dao.createdAt.toEpochMilli,
       result = dao.output,
       stepTreeId = dao.stepTreeId
     ))
@@ -85,7 +86,13 @@ class RunsController @Inject()(
     _.description("Get runs related to a step").request[GetRelatedRunsRequest].responseWith[GetRelatedRunsResult](status = 200)
   } { r: GetRelatedRunsRequest =>
     db.findRelatedRuns(r.id).
-      map(_.map(dao => RunSlimResult(id = dao.id, state = dao.state, result = dao.output, stepTreeId = dao.stepTreeId))).
+      map(_.map(dao => RunSlimResult(
+        id = dao.id,
+        state = dao.state,
+        createdAt = dao.createdAt.toEpochMilli,
+        result = dao.output,
+        stepTreeId = dao.stepTreeId
+      ))).
       map(GetRelatedRunsResult)
   }
 
@@ -124,6 +131,7 @@ case class CompleteRunRequest(@QueryParam token: String, result: Option[ResultDa
 case class RunSlimResult(
   id: RunInstanceId,
   state: RunState,
+  createdAt: Long,
   stepTreeId: StepTreeId,
   result: Option[ResultData]
 )

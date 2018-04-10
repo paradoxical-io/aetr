@@ -57,6 +57,7 @@ export class RunData {
     state: RunState;
     id: string;
     result: string;
+    createdAt: number;
     stepTreeId: string;
 }
 
