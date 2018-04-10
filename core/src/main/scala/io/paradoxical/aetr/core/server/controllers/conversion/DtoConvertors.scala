@@ -2,7 +2,7 @@ package io.paradoxical.aetr.core.server.controllers.conversion
 
 import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.model._
-import io.paradoxical.aetr.core.server.controllers.{StepsFatDto, StepsSlimDto}
+import io.paradoxical.aetr.core.server.controllers._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,6 +21,32 @@ object DtoConvertors {
 }
 
 class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: ExecutionContext) {
+  def toRunResult(run: Run): RunTreeDto = {
+    RunTreeDto(
+      id = run.id,
+      root = run.rootId,
+      state = run.state,
+      result = run.output,
+      stepTree = StepsRootDto(
+        id = run.repr.id,
+        name = run.repr.name,
+        stepType = stepType(run.repr)
+      ),
+      children = run.children.map(toRunResult)
+    )
+  }
+
+  private def stepType(stepTree: StepTree): StepType = {
+    stepTree match {
+      case _: SequentialParent =>
+        StepType.Sequential
+      case _: ParallelParent =>
+        StepType.Parallel
+      case _: Action =>
+        StepType.Action
+    }
+  }
+
   def fromStep(stepTree: StepTree): StepsFatDto = {
     val (action, children, typ) =
       stepTree match {

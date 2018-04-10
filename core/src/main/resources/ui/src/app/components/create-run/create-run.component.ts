@@ -33,7 +33,7 @@ export class CreateRunComponent implements OnInit {
 
     create() {
         this.api.createRun(this.step.id, this.input).subscribe(runId => {
-            this.router.navigateByUrl("/run/details/" + runId)
+            this.router.navigateByUrl("/runs/details/" + runId)
         })
     }
 }

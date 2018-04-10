@@ -55,10 +55,20 @@ export enum RunState {
 
 export class RunData {
     state: RunState;
+    id: string;
     result: string;
     stepTreeId: string;
 }
 
 export class GetRelatedRunsResult {
     runs: RunData[];
+}
+
+export class RunTree {
+    id: string;
+    root: string;
+    state: RunState;
+    result: string;
+    stepTree: StepRoot;
+    children: RunTree[];
 }

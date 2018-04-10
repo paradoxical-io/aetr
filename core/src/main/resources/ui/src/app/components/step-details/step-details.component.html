@@ -17,7 +17,7 @@
 
                 <ul *ngFor="let run of relatedRuns">
                     <li>
-                        <span>{{run.state}}</span>
+                        <span class="link" [routerLink]="['/runs/details/', run.id]">{{run.state}}</span>
                     </li>
                 </ul>
             </ul>

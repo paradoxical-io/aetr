@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs/Observable";
 import 'rxjs/add/operator/map'
-import {CreateRunResult, CreateStepRequest, CreateStepResponse, GetRelatedRunsResult, RunData, Step, StepRoot} from "../model/model";
+import {CreateRunResult, CreateStepRequest, CreateStepResponse, GetRelatedRunsResult, RunData, RunTree, Step, StepRoot} from "../model/model";
 
 @Injectable()
 export class ApiService {
@@ -34,6 +34,10 @@ export class ApiService {
         return this.http.post<CreateRunResult>(`api/v1/runs/step/${stepId}`, {
             input: data
         }).map(x => x.id)
+    }
+
+    getRun(rootId: string): Observable<RunTree> {
+        return this.http.get<RunTree>(`/api/v1/runs/${rootId}`)
     }
 
     listRelatedRuns(stepId: string): Observable<RunData[]> {
