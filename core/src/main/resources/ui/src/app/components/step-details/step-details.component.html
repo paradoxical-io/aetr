@@ -1,13 +1,37 @@
 <div class="container-fluid">
-    <tree-root #tree [nodes]="getNodes()" [options]="getOptions()"
-               (activate)="selectNode($event)"
-               (deactivate)="unselectNode($event)">
-        <ng-template #treeNodeTemplate let-node let-index="index">
-            <div [ngSwitch]="node.data.stepType">
-                <app-sequential *ngSwitchCase="'Sequential'" [data]="node.data"></app-sequential>
-                <app-parallel *ngSwitchCase="'Parallel'" [data]="node.data"></app-parallel>
-                <app-action *ngSwitchCase="'Action'" [data]="node.data"></app-action>
-            </div>
-        </ng-template>
-    </tree-root>
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 hidden-xs-down bg-light sidebar">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item active p-2">
+                    Recent runs
+                </li>
+            </ul>
+
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item active p-2">
+                    Related Parents
+                </li>
+
+                <ul *ngFor="let step of relatedParents | orderBy : 'name'">
+                    <li class="bg-light">
+                        <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
+                    </li>
+                </ul>
+            </ul>
+        </nav>
+
+        <main class="col-sm-9">
+            <tree-root #tree [nodes]="getNodes()" [options]="getOptions()"
+                       (activate)="selectNode($event)"
+                       (deactivate)="unselectNode($event)">
+                <ng-template #treeNodeTemplate let-node let-index="index">
+                    <div [ngSwitch]="node.data.stepType">
+                        <app-sequential *ngSwitchCase="'Sequential'" [data]="node.data"></app-sequential>
+                        <app-parallel *ngSwitchCase="'Parallel'" [data]="node.data"></app-parallel>
+                        <app-action *ngSwitchCase="'Action'" [data]="node.data"></app-action>
+                    </div>
+                </ng-template>
+            </tree-root>
+        </main>
+    </div>
 </div>

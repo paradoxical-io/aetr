@@ -1,6 +1,6 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
-import {ApiService, Step, StepType} from "../../services/api.service";
+import {ApiService, Step, StepRoot, StepType} from "../../services/api.service";
 import {ITreeOptions} from "angular-tree-component";
 
 @Component({
@@ -18,6 +18,8 @@ export class StepDetailsComponent implements OnInit {
     StepType = StepType;
 
     selectedStep: Step = undefined;
+
+    relatedParents: StepRoot[];
 
     @ViewChild('tree') tree;
 
@@ -59,9 +61,12 @@ export class StepDetailsComponent implements OnInit {
         this.route.paramMap.subscribe(x => {
             let stepId = x.get('id');
 
-            this.api.getStep(stepId).subscribe(s => {
-                this.step = s;
-                this.tree.treeModel.update();
+            this.api.getStepParents(stepId).subscribe(parents => {
+                this.api.getStep(stepId).subscribe(s => {
+                    this.step = s;
+                    this.relatedParents = parents;
+                    this.tree.treeModel.update();
+                })
             })
         })
     }
