@@ -21,6 +21,14 @@ export class ApiService {
         return this.http.post<CreateStepResponse>(`api/v1/steps`, request)
     }
 
+    deleteStep(id: string): Observable<void> {
+        return this.http.delete(`api/v1/steps/${id}`).map(x => null)
+    }
+
+    getStepParents(id: string): Observable<StepRoot[]> {
+        return this.http.get<StepRoot[]>(`api/v1/steps/${id}/parents`)
+    }
+
     updateStep(step: Step): Observable<void> {
         return this.http.put<Step>(`api/v1/steps/slim`, {
             id: step.id,

@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService, Step, StepType} from "../../../../services/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
+import {Location} from '@angular/common';
 
 @Component({
     selector: 'app-parent',
@@ -9,7 +10,12 @@ import {ActivatedRoute, Router} from "@angular/router";
 })
 export class EditStepParentComponent implements OnInit {
 
-    constructor(private api: ApiService, private route: ActivatedRoute, private router: Router) {
+    constructor(
+        private api: ApiService,
+        private route: ActivatedRoute,
+        private router: Router,
+        private location: Location
+    ) {
     }
 
     step: Step;
@@ -46,7 +52,18 @@ export class EditStepParentComponent implements OnInit {
 
     save() {
         this.api.updateStep(this.step).subscribe(x => {
-            this.router.navigateByUrl("/steps/details/" + this.step.id)
+            this.location.back()
+        })
+    }
+
+    clone() {
+        this.api.insertStep({
+            name: this.step.name + " copy",
+            stepType: this.step.stepType,
+            action: this.step.action,
+            children: this.step.children.map(c => c.id)
+        }).subscribe(x => {
+            this.router.navigateByUrl("/steps/edit/parent/" + x.id)
         })
     }
 }

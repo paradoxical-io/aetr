@@ -1,5 +1,7 @@
-<div class="container">
-    <tree-root #tree [nodes]="getNodes()" [options]="getOptions()">
+<div class="container-fluid">
+    <tree-root #tree [nodes]="getNodes()" [options]="getOptions()"
+               (activate)="selectNode($event)"
+               (deactivate)="unselectNode($event)">
         <ng-template #treeNodeTemplate let-node let-index="index">
             <div [ngSwitch]="node.data.stepType">
                 <app-sequential *ngSwitchCase="'Sequential'" [data]="node.data"></app-sequential>

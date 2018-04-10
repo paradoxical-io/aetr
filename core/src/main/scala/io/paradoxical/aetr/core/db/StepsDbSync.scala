@@ -12,7 +12,7 @@ class StepsDbSync @Inject()(stepDb: StepDb) {
   }
 
   def deleteSteps(stepTree: StepTree): Unit = {
-    stepDb.deleteStep(stepTree).waitForResult()
+    stepDb.deleteStepTree(stepTree).waitForResult()
   }
 
   def getSteps(stepTreeId: StepTreeId): StepTree = {

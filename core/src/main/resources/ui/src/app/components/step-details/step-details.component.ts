@@ -17,6 +17,8 @@ export class StepDetailsComponent implements OnInit {
 
     StepType = StepType;
 
+    selectedStep: Step = undefined;
+
     @ViewChild('tree') tree;
 
     ngAfterViewInit() {
@@ -27,6 +29,14 @@ export class StepDetailsComponent implements OnInit {
         return [this.step]
     }
 
+    selectNode(event) {
+        this.selectedStep = event.node.data
+    }
+
+    unselectNode(event) {
+        this.selectedStep = undefined;
+    }
+
     getOptions(): ITreeOptions {
         return {
             idField: '_id',
@@ -35,23 +45,24 @@ export class StepDetailsComponent implements OnInit {
             allowDrag: (node) => {
                 return false;
             },
-            allowDrop: (node, { parent, index }) => {
-               return false;
+            allowDrop: (node, {parent, index}) => {
+                return false;
             }
         }
     }
 
     ngOnInit() {
+        this.loadData()
+    }
+
+    loadData() {
         this.route.paramMap.subscribe(x => {
             let stepId = x.get('id');
 
             this.api.getStep(stepId).subscribe(s => {
-                this.step = s
+                this.step = s;
+                this.tree.treeModel.update();
             })
         })
-    }
-
-    raw(): string {
-        return JSON.stringify(this.step);
     }
 }

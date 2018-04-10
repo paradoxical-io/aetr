@@ -1,8 +1,10 @@
 package io.paradoxical.aetr.core.server.controllers
 
 import com.twitter.finagle.http.Request
+import com.twitter.finatra.http.exceptions.ConflictException
 import com.twitter.finatra.request.RouteParam
 import io.paradoxical.aetr.core.db.dao.StepDb
+import io.paradoxical.aetr.core.db.dao.tables.StepTreeDao
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.server.controllers.conversion.DtoConvertors
 import io.paradoxical.finatra.Framework
@@ -12,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit executionContext: ExecutionContext) extends Framework.RestApi {
 
   import DtoConvertors._
+  import io.paradoxical.aetr.core.graph.CycleDetector.Implicits._
 
   getWithDoc[GetStepsId, Future[StepsSlimDto]]("/api/v1/steps/:id/slim") {
     _.description("Get a particular step but not nested").request[GetStepsId].responseWith[StepsSlimDto](status = 200)
@@ -37,8 +40,16 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
     }))
   }
 
+  getWithDoc("/api/v1/steps/:id/parents") {
+    _.description("Get all nodes with this as a child").request[GetStepsId].responseWith[List[StepsRootDto]](status = 200)
+  } { r: GetStepsId =>
+    db.getParentsOf(r.id).map(related => {
+      related.map(toRoot)
+    })
+  }
+
   postWithDoc("/api/v1/steps") {
-    _.description("Create a new step node").request[StepsSlimDto].responseWith[CreateStepResponse](status = 200)
+    _.description("Create a new step node").request[GetStepsId].responseWith[CreateStepResponse](status = 200)
   } { r: CreateStepRequest =>
 
     val slim = StepsSlimDto(
@@ -52,6 +63,13 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
     converters.toStep(slim).map(db.upsertStep).map(_ => CreateStepResponse(slim.id))
   }
 
+  deleteWithDoc("/api/v1/steps/:id") {
+    _.description("Deletes a step if it is unused in other steps").
+      request[DeleteStepRequest].responseWith[Unit](status = 200)
+  } { req: DeleteStepRequest =>
+    db.deleteStep(req.id)
+  }
+
   putWithDoc("/api/v1/steps/slim") {
     _.description("Upsert slim steps").request[StepsSlimDto].responseWith[Unit](status = 200)
   } { r: StepsSlimDto =>
@@ -61,15 +79,35 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
   putWithDoc("/api/v1/steps") {
     _.description("Upsert a step tree").request[StepsFatDto].responseWith[Unit](status = 200)
   } { r: StepsFatDto =>
-    db.upsertStep(converters.toStep(r))
+    val step = converters.toStep(r)
+
+    if (step.hasCycles) {
+      throw ConflictException("Cannot upsert a step with cycles!")
+    } else {
+      db.upsertStep(step)
+    }
   }
 
   postWithDoc("/api/v1/steps/:id/children") {
     _.description("Sets the children for the id").request[AddChildrenRequest].responseWith[Unit](status = 200)
   } { r: AddChildrenRequest =>
+    if (r.children.contains(r.id)) {
+      throw ConflictException("Cannot add a child that is also the root")
+    }
+
     db.setChildren(r.id, r.children)
   }
+
+  private def toRoot(item: StepTreeDao): StepsRootDto = {
+    StepsRootDto(
+      id = item.id,
+      name = item.name,
+      stepType = item.stepType
+    )
+  }
 }
+
+case class DeleteStepRequest(@RouteParam id: StepTreeId)
 
 case class AddChildrenRequest(@RouteParam id: StepTreeId, children: List[StepTreeId])
 
