@@ -29,7 +29,7 @@ class ExecutionHandlerTests extends TestBase {
       Actionable(run, tree, None)
     )
 
-    verify(db, times(1)).trySetRunState(any(), stateResults.capture(), any())
+    verify(db, times(1)).trySetRunState(any(), any(), stateResults.capture(), any())
 
     stateResults.getAllValues.asScala.last shouldEqual RunState.Error
   }
@@ -49,7 +49,7 @@ class ExecutionHandlerTests extends TestBase {
       Actionable(run, tree, None)
     )
 
-    verify(db, times(1)).trySetRunState(any(), stateResults.capture(), any())
+    verify(db, times(1)).trySetRunState(any(), any(), stateResults.capture(), any())
 
     stateResults.getAllValues.asScala.last shouldEqual RunState.Executing
   }

@@ -10,6 +10,8 @@ class ExecutionHandler @Inject()(storage: StepsDbSync, urlExecutor: UrlExecutor)
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def execute(actionable: Actionable): Try[ExecutionResult] = {
+    val root = storage.getRunTree(actionable.run.rootId)
+
     try {
       val runToken = createRunToken(actionable.run)
 
@@ -21,13 +23,10 @@ class ExecutionHandler @Inject()(storage: StepsDbSync, urlExecutor: UrlExecutor)
             map(result => (result, RunState.Executing))
         case NoOp() =>
           Success((EmptyExecutionResult, RunState.Complete))
-      }
 
       val resultState = result.map(_._2).getOrElse(RunState.Error)
 
-      // if by the time this line runs its already complete the version will be updated
-      // and this line will no-op. This is because we are using the version _pre_ execution
-      storage.trySetRunState(actionable.run, resultState)
+      storage.trySetRunState(actionable.run.id, root, resultState)
 
       result.map(_._1)
     }

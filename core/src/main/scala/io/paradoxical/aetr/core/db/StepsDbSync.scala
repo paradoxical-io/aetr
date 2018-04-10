@@ -13,6 +13,10 @@ class StepsDbSync @Inject()(stepDb: StepDb)(implicit executionContext: Execution
     stepDb.upsertStep(stepTree).waitForResult()
   }
 
+  def getRunTree(rootId: RootId): Run = {
+    stepDb.getRunTree(rootId).waitForResult()
+  }
+
   def deleteSteps(stepTree: StepTree): Unit = {
     stepDb.deleteStepTree(stepTree).waitForResult()
   }
@@ -46,20 +50,27 @@ class StepsDbSync @Inject()(stepDb: StepDb)(implicit executionContext: Execution
     Try(stepDb.upsertRun(run).waitForResult())
   }
 
+  /**
+   * Tries to set the run instance id state and result given the version of the tree defined in the root
+   * @param runId
+   * @param root
+   * @param state
+   * @param result
+   * @return
+   */
   def trySetRunState(
-    run: Run,
+    runId: RunInstanceId,
+    root: Run,
     state: RunState,
     result: Option[ResultData] = None
   ): Boolean = {
-    stepDb.getRunTree(run.rootId).flatMap(root => {
-      val manager = new RunManager(root)
+    val manager = new RunManager(root)
 
-      manager.setState(run.id, state, result.map(Some(_)))
+    manager.setState(runId, state, result.map(Some(_)))
 
-      stepDb.upsertRun(manager.root).map(_ => true).recover {
-        case _ => false
-      }
-    }).waitForResult()
+    stepDb.upsertRun(manager.root).map(_ => true).recover {
+      case _ => false
+    }.waitForResult()
   }
 
   /**

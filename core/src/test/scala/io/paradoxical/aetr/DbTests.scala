@@ -235,7 +235,7 @@ class DbTests extends PostgresDbTestBase {
       db.tryLock(run.rootId)(r => {
         action
 
-        db.trySetRunState(r, state)
+        db.trySetRunState(r.id, db.getRunTree(r.rootId), state)
       }).getOrElse(false)
     }
 
@@ -358,6 +358,8 @@ class DbTests extends PostgresDbTestBase {
     db.upsertSteps(tree)
     db.tryUpsertRun(run)
 
+    // make su re a no-op setting itself to complete doesn't re-set itself
+    // back to executing
     new ExecutionHandler(db, urlExecutor).execute(
       Actionable(db.loadRun(run.rootId), tree, None)
     )
