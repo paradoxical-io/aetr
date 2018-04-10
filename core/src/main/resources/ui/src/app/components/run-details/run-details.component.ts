@@ -1,8 +1,9 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {forkJoin} from "rxjs/observable/forkJoin";
 import {ApiService} from "../../services/api.service";
 import {ActivatedRoute} from "@angular/router";
-import {RunTree} from "../../model/model";
+import {RunTree, Step, RunState} from "../../model/model";
+import {ITreeOptions} from "angular-tree-component";
 
 @Component({
     selector: 'app-run-details',
@@ -19,6 +20,38 @@ export class RunDetailsComponent implements OnInit {
     }
 
     run: RunTree;
+
+    selectedRunChild: RunTree;
+
+    RunState = RunState;
+
+    @ViewChild('tree') tree;
+
+    ngAfterViewInit() {
+        this.tree.treeModel.expandAll();
+    }
+
+    selectNode(event) {
+        this.selectedRunChild = event.node.data
+    }
+
+    getNodes(): RunTree[] {
+        return [this.run]
+    }
+
+    getOptions(): ITreeOptions {
+        return {
+            idField: 'id',
+            displayField: 'name',
+            childrenField: 'children',
+            allowDrag: (node) => {
+                return false;
+            },
+            allowDrop: (node, {parent, index}) => {
+                return false;
+            }
+        }
+    }
 
     loadData() {
         this.route.paramMap.subscribe(x => {
