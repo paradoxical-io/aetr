@@ -73,6 +73,10 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
   putWithDoc("/api/v1/steps/slim") {
     _.description("Upsert slim steps").request[StepsSlimDto].responseWith[Unit](status = 200)
   } { r: StepsSlimDto =>
+    if (r.children.exists(_.contains(r.id))) {
+      throw ConflictException("Cannot add a child that is also the root")
+    }
+
     converters.toStep(r).map(db.upsertStep)
   }
 

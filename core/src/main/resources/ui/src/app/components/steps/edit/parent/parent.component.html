@@ -27,7 +27,7 @@
                     <ul class="list-group">
                         <li *ngFor="let child of step.children; let x = index" class="list-group-item"
                             dnd-sortable [sortableIndex]="x"
-                            (onDropSuccess)="reAddToAll($event)"
+                            (onDropSuccess)="resyncSteps()"
                             [dragData]="child"
                             [dragEnabled]="true">
                             {{child.name}}
@@ -38,16 +38,24 @@
                 <button class="btn btn-primary" type="submit" (click)="save()">Save</button>
                 <button class="btn btn-primary" type="submit" (click)="clone()">Clone As New</button>
             </form>
+
+            <div class="card" style="width: 18rem;" *ngIf="errorText.length > 0">
+                <div class="card-body">
+                    <h5 class="card-title">Unable to process request</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{errorText}}</h6>
+                </div>
+            </div>
         </div>
 
         <div class="col-sm3">
             Available steps:
 
-            <div class="panel-body" dnd-sortable-container [sortableData]="allSteps" [dropZones]="['child-dropZone']">
+            <div class="panel-body" dnd-sortable-container [sortableData]="mutatingStepList" [dropZones]="['child-dropZone']">
                 <ul class="list-group">
-                    <li *ngFor="let s of allSteps; let i = index" class="list-group-item"
+                    <li *ngFor="let s of mutatingStepList; let i = index" class="list-group-item"
                         dnd-sortable [sortableIndex]="i"
                         [dragData]="s"
+                        (onDropSuccess)="resyncSteps()"
                         [dragEnabled]="true">
                         {{s.name}}
                     </li>

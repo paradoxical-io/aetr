@@ -24,17 +24,23 @@ export class EditStepParentComponent implements OnInit {
 
     allSteps: Step[];
 
+    // the array used in the UI
+    mutatingStepList: Step[];
+
+    errorText: string = "";
+
     ngOnInit() {
         this.route.paramMap.subscribe(x => {
             let stepId = x.get('id');
 
             this.api.getStep(stepId).subscribe(s => {
-                this.step = s;
-
                 this.api.listSteps().subscribe(st => {
                     this.allSteps = st;
+                    this.step = s;
 
-                    this.sortSteps()
+                    this.sortSteps();
+
+                    this.resyncSteps();
                 })
             })
         })
@@ -44,15 +50,15 @@ export class EditStepParentComponent implements OnInit {
         this.allSteps.sort((a, b) => a.name.localeCompare(b.name))
     }
 
-    reAddToAll(event: any) {
-        this.allSteps.push(event);
-
-        this.sortSteps()
+    resyncSteps() {
+        this.mutatingStepList = this.allSteps.slice();
     }
 
     save() {
         this.api.updateStep(this.step).subscribe(x => {
-            this.location.back()
+            this.router.navigateByUrl("/steps/list")
+        }, err => {
+            this.errorText = err.error.errors[0];
         })
     }
 
@@ -64,6 +70,8 @@ export class EditStepParentComponent implements OnInit {
             children: this.step.children.map(c => c.id)
         }).subscribe(x => {
             this.router.navigateByUrl("/steps/edit/parent/" + x.id)
+        }, err => {
+            this.errorText = err.error.errors[0];
         })
     }
 }
