@@ -1,0 +1,40 @@
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 hidden-xs-down bg-light sidebar">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item active p-2">
+                    Actions
+                </li>
+                <li class="nav-item  p-2">
+                    <span class="link" [routerLink]="['/steps/new']">New Step</span>
+                </li>
+                <li class="nav-item  p-2">
+                    <span class="link" (click)="deleteSelected()">Delete Selected</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="col-sm-9">
+            <ul *ngFor="let step of steps | orderBy : 'name'" class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <input type="checkbox"
+                           (click)="selectToggle(step.id)"
+                           [checked]="selectedId == step.id">
+                    <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
+                </li>
+            </ul>
+
+            <div class="card" style="width: 18rem;" *ngIf="errorText.length > 0">
+                <div class="card-body">
+                    <h5 class="card-title">Unable to process request</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{errorText}}</h6>
+                    <ul *ngFor="let step of selectedRelatedParents | orderBy : 'name'" class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <span class="card-link link" [routerLink]="['/steps/edit/parent/', step.id]">{{step.name}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>

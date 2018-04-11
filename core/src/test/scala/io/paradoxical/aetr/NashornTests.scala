@@ -3,6 +3,7 @@ package io.paradoxical.aetr
 import io.paradoxical.aetr.core.model.{Mappers, Reducers, ResultData}
 
 class NashornTests extends TestBase {
+
   "Nashorn mapper" should "invoke" in {
     Mappers.Nashorn(
       """

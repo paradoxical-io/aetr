@@ -30,6 +30,26 @@ class DbTests extends PostgresDbTestBase {
     db.getStep(parent.id).waitForResult() shouldEqual parent
   }
 
+  it should "attach children and detach children" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1 = Action(name = NodeName("leaf1"))
+
+    val parent = SequentialParent(name = NodeName("parent"))
+
+    db.upsertStep(parent).waitForResult()
+
+    db.upsertStep(leaf1).waitForResult()
+
+    db.setChildren(parent.id, List(leaf1.id)).waitForResult()
+
+    db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children.map(_.id) shouldEqual List(leaf1.id)
+
+    db.setChildren(parent.id, Nil).waitForResult()
+
+    db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children shouldEqual Nil
+  }
+
   it should "save mappers and reducers" in withDb { injector =>
     val db = injector.instance[StepDb]
 
@@ -215,7 +235,7 @@ class DbTests extends PostgresDbTestBase {
       db.tryLock(run.rootId)(r => {
         action
 
-        db.trySetRunState(r.id, r.version, state)
+        db.trySetRunState(r.id, db.getRunTree(r.rootId), state)
       }).getOrElse(false)
     }
 
@@ -338,6 +358,8 @@ class DbTests extends PostgresDbTestBase {
     db.upsertSteps(tree)
     db.tryUpsertRun(run)
 
+    // make su re a no-op setting itself to complete doesn't re-set itself
+    // back to executing
     new ExecutionHandler(db, urlExecutor).execute(
       Actionable(db.loadRun(run.rootId), tree, None)
     )

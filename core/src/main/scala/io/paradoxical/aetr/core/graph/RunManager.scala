@@ -63,9 +63,13 @@ class RunManager(val root: Run) {
     run.parent.foreach(sync)
   }
 
-  def setState(run: RunId, state: RunState): Unit = {
+  def setState(run: RunId, state: RunState, result: Option[Option[ResultData]] = None): Unit = {
     find(run).foreach(r => {
       r.state = state
+
+      if(result.isDefined) {
+        r.output = result.get
+      }
 
       sync(r)
     })

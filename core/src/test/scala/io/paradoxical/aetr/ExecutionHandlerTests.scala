@@ -1,7 +1,7 @@
 package io.paradoxical.aetr
 
 import io.paradoxical.aetr.core.db.StepsDbSync
-import io.paradoxical.aetr.core.execution.ExecutionHandler
+import io.paradoxical.aetr.core.execution.{EmptyExecutionResult, ExecutionHandler}
 import io.paradoxical.aetr.core.execution.api.UrlExecutor
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
@@ -10,6 +10,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success}
 
 class ExecutionHandlerTests extends TestBase {
   "Execution handler" should "mark actions as errors" in {
@@ -23,7 +24,7 @@ class ExecutionHandlerTests extends TestBase {
 
     val stateResults = ArgumentCaptor.forClass(classOf[RunState])
 
-    when(urlExecutor.execute(any(), any(), any())).thenThrow(new RuntimeException("Url execution failed"))
+    when(urlExecutor.execute(any(), any(), any())).thenReturn(Failure(new RuntimeException("Url execution failed")))
 
     new ExecutionHandler(db, urlExecutor).execute(
       Actionable(run, tree, None)
@@ -38,6 +39,8 @@ class ExecutionHandlerTests extends TestBase {
     val db = mock[StepsDbSync]
 
     val urlExecutor = mock[UrlExecutor]
+
+    when(urlExecutor.execute(any(), any(), any())).thenReturn(Success(EmptyExecutionResult))
 
     val tree = Action(name = NodeName("test"), execution = ApiExecution(url = new URL("http://foo")))
 

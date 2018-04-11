@@ -33,6 +33,6 @@ class Advancer @Inject()(storage: StepsDbSync, executionHandler: ExecutionHandle
   private def dispatch(run: Run): Boolean = {
     require(run.id.value == run.rootId.value, s"Only the root can advance, but got ${run.id}!")
 
-    new RunManager(run).next().map(executionHandler.execute).exists(_ => true)
+    new RunManager(run).next().map(executionHandler.execute).exists(_.isSuccess)
   }
 }

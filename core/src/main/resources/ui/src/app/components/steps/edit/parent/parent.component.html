@@ -1,0 +1,66 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">
+            <form class="needs-validation" novalidate>
+                <div class="form-group">
+                    <label for="stepName">Step Name</label>
+                    <input type="text" class="form-control"
+                           id="stepName"
+                           placeholder="Your Step"
+                           [(ngModel)]="step.name"
+                           name="stepName"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="stepType">Step Type</label>
+                    <select class="form-control" id="stepType" [(ngModel)]="step.stepType" name="stepType" required>
+                        <option [selected]="step.stepType == StepType.Parallel">{{StepType.Parallel}}</option>
+                        <option [selected]="step.stepType == StepType.Sequential">{{StepType.Sequential}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group" dnd-sortable-container [sortableData]="step.children" [dropZones]="['child-dropZone']">
+                    <div *ngIf="step.children.length == 0">
+                        Drag children here...
+                    </div>
+                    <ul class="list-group">
+                        <li *ngFor="let child of step.children; let x = index" class="list-group-item"
+                            dnd-sortable [sortableIndex]="x"
+                            (onDropSuccess)="resyncSteps()"
+                            [dragData]="child"
+                            [dragEnabled]="true">
+                            {{child.name}}
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="btn btn-primary" type="submit" (click)="save()">Save</button>
+                <button class="btn btn-primary" type="submit" (click)="clone()">Clone As New</button>
+            </form>
+
+            <div class="card" style="width: 18rem;" *ngIf="errorText.length > 0">
+                <div class="card-body">
+                    <h5 class="card-title">Unable to process request</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{errorText}}</h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm3">
+            Available steps:
+
+            <div class="panel-body" dnd-sortable-container [sortableData]="mutatingStepList" [dropZones]="['child-dropZone']">
+                <ul class="list-group">
+                    <li *ngFor="let s of mutatingStepList; let i = index" class="list-group-item"
+                        dnd-sortable [sortableIndex]="i"
+                        [dragData]="s"
+                        (onDropSuccess)="resyncSteps()"
+                        [dragEnabled]="true">
+                        {{s.name}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

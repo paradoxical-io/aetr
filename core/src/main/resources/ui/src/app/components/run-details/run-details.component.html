@@ -1,0 +1,27 @@
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-sm-3 col-md-2 hidden-xs-down bg-light sidebar">
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item active p-2">
+          <h4>Actions</h4>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="col-sm-9">
+      <tree-root #tree [nodes]="getNodes()" [options]="getOptions()" (activate)="selectNode($event)">
+        <ng-template #treeNodeTemplate let-node let-index="index">
+          <div>
+            {{node.data.stepTree.name}} - {{node.data.state}}
+          </div>
+        </ng-template>
+      </tree-root>
+
+      <div *ngIf="selectedRunChild && selectedRunChild.state == RunState.Complete">
+        Results:
+
+        <pre>{{selectedRunChild.result}}</pre>
+      </div>
+    </main>
+  </div>
+</div>

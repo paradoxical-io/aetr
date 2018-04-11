@@ -27,8 +27,8 @@ class StepDb @Inject()(
   import dataMappers._
   import provider.driver.api._
 
-  def getRootSteps(): Future[Seq[StepTree]] = {
-    val rootsQ = steps.query.filter(s => s.id === s.root || s.root.isEmpty)
+  def getAllSteps(): Future[Seq[StepTree]] = {
+    val rootsQ = steps.query
 
     provider.withDB {
       for {
@@ -73,7 +73,20 @@ class StepDb @Inject()(
     }
   }
 
-  def deleteStep(stepTree: StepTree): Future[Unit] = {
+  def deleteStep(id: StepTreeId): Future[Unit] = {
+    val deleteChildren = children.query.filter(_.id === id).delete
+
+    val deleteTreeNode = steps.query.filter(_.id === id).delete
+
+    provider.withDB {
+      DBIO.seq(
+        deleteChildren,
+        deleteTreeNode
+      ).transactionally
+    }
+  }
+
+  def deleteStepTree(stepTree: StepTree): Future[Unit] = {
     val decomposer = new StepTreeDecomposer(stepTree)
 
     val deleteExistingChildren = children.query.filter(_.id inSet decomposer.dao.map(_.id)).delete
@@ -84,6 +97,42 @@ class StepDb @Inject()(
       DBIO.seq(
         deleteExistingChildren,
         deleteTrees
+      ).transactionally
+    }
+  }
+
+  def getRoots(id: StepTreeId): Future[Seq[StepTreeId]] = {
+    val rootQ = sql""" WITH RECURSIVE getRoot(idx, parent) AS (
+              SELECT 0, ${id}
+              UNION
+              SELECT getRoot.idx + 1, step_children.id FROM getRoot, step_children
+              WHERE step_children.child_id IN (getRoot.parent)
+            )
+            SELECT parent FROM getRoot ORDER BY idx""".as[StepTreeId]
+
+    provider.withDB(rootQ)
+  }
+
+  def getParentsOf(id: StepTreeId): Future[Seq[StepTreeDao]] = {
+    val parents =
+      children.query.filter(c => c.childId === id && c.id =!= c.childId).
+        join(steps.query).on { case (child, step) => child.id === step.id }.
+        map(_._2)
+
+    provider.withDB(parents.result)
+  }
+
+  def setChildren(stepTreeId: StepTreeId, kidsToSet: List[StepTreeId]): Future[Unit] = {
+    val deleteExistingChildren = children.query.filter(_.id === stepTreeId).delete
+
+    val daos = StepTreeComposer.childrenToDao(stepTreeId, kidsToSet)
+
+    val reInsertNewChildren = children.query.forceInsertAll(daos)
+
+    provider.withDB {
+      DBIO.seq(
+        deleteExistingChildren,
+        reInsertNewChildren
       ).transactionally
     }
   }
@@ -312,3 +361,5 @@ class StepDb @Inject()(
 case class VersionMismatchError() extends RuntimeException()
 
 case class StepRunDao(stepTreeDao: StepTreeDao, runDao: RunDao)
+
+case class RelatedTree(root: StepTreeDao, parent: StepTreeDao)

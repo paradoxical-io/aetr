@@ -1,18 +1,24 @@
 package io.paradoxical.aetr.core.db
 
 import io.paradoxical.aetr.core.db.dao.StepDb
+import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.common.extensions.Extensions._
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-class StepsDbSync @Inject()(stepDb: StepDb) {
+class StepsDbSync @Inject()(stepDb: StepDb)(implicit executionContext: ExecutionContext) {
   def upsertSteps(stepTree: StepTree): Unit = {
     stepDb.upsertStep(stepTree).waitForResult()
   }
 
+  def getRunTree(rootId: RootId): Run = {
+    stepDb.getRunTree(rootId).waitForResult()
+  }
+
   def deleteSteps(stepTree: StepTree): Unit = {
-    stepDb.deleteStep(stepTree).waitForResult()
+    stepDb.deleteStepTree(stepTree).waitForResult()
   }
 
   def getSteps(stepTreeId: StepTreeId): StepTree = {
@@ -44,13 +50,27 @@ class StepsDbSync @Inject()(stepDb: StepDb) {
     Try(stepDb.upsertRun(run).waitForResult())
   }
 
+  /**
+   * Tries to set the run instance id state and result given the version of the tree defined in the root
+   * @param runId
+   * @param root
+   * @param state
+   * @param result
+   * @return
+   */
   def trySetRunState(
-    id: RunInstanceId,
-    version: Version,
+    runId: RunInstanceId,
+    root: Run,
     state: RunState,
     result: Option[ResultData] = None
   ): Boolean = {
-    stepDb.setRunState(id, version, state, result).waitForResult()
+    val manager = new RunManager(root)
+
+    manager.setState(runId, state, result.map(Some(_)))
+
+    stepDb.upsertRun(manager.root).map(_ => true).recover {
+      case _ => false
+    }.waitForResult()
   }
 
   /**
