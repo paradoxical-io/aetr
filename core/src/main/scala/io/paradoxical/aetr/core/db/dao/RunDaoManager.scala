@@ -19,7 +19,7 @@ class RunDaoManager @Inject()() {
       } else {
         val item = Run(
           id = r.id,
-          children = runData.filter(_.parent.exists(_ == r.id)).map(resolve),
+          children = runData.filter(_.parent.exists(_ == r.id)).sortBy(_.order).map(resolve),
           rootId = rootId,
           version = r.version,
           state = r.state,
@@ -55,15 +55,16 @@ class RunDaoManager @Inject()() {
 
     flattened.map(r => {
       RunDao(
-        id = RunInstanceId(r.id.value),
-        root = RunInstanceId(r.rootId.value),
-        parent = r.parent.map(p => RunInstanceId(p.id.value)),
-        version = r.version,
-        stepTreeId = r.repr.id,
-        state = r.state,
-        input = r.input,
-        output = r.output,
-        createdAt = r.createdAt,
+        id = RunInstanceId(r.run.id.value),
+        root = RunInstanceId(r.run.rootId.value),
+        parent = r.run.parent.map(p => RunInstanceId(p.id.value)),
+        version = r.run.version,
+        stepTreeId = r.run.repr.id,
+        state = r.run.state,
+        input = r.run.input,
+        order = r.order,
+        output = r.run.output,
+        createdAt = r.run.createdAt,
         lastUpdatedAt = now
       )
     })

@@ -61,7 +61,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   it should "re-run pending children" in new ActionList {
     val m = new RunManager(treeRoot)
 
-    val all = m.flatten
+    val all = m.flatten.map(_.run)
 
     def findByStep(stepTreeId: StepTreeId): Run = {
       all.find(_.repr.id == stepTreeId).get
@@ -103,7 +103,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   it should "find a node" in new ActionList {
     val manager = new RunManager(treeRoot)
 
-    val allNodes = manager.flatten
+    val allNodes = manager.flatten.map(_.run)
 
     val toFind = Random.shuffle(allNodes).head
 
@@ -117,7 +117,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "flatten run lists" in new ActionList {
-    new RunManager(treeRoot).flatten.map(_.repr) shouldEqual new TreeManager(treeRoot).flatten
+    new RunManager(treeRoot).flatten.map(_.run.repr) shouldEqual new TreeManager(treeRoot).flatten
   }
 
   it should "pass the result of the previous into the current" in new ActionList {

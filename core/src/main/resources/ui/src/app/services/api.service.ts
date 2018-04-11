@@ -2,7 +2,10 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs/Observable";
 import 'rxjs/add/operator/map'
-import {CreateRunResult, CreateStepRequest, CreateStepResponse, GetRelatedRunsResult, RunData, RunTree, Step, StepRoot} from "../model/model";
+import {
+    CreateRunResult, CreateStepRequest, CreateStepResponse, GetRelatedRunsResult, ListRunsData, RunData, RunState, RunTree, Step,
+    StepRoot
+} from "../model/model";
 
 @Injectable()
 export class ApiService {
@@ -12,6 +15,10 @@ export class ApiService {
 
     listSteps(): Observable<Step[]> {
         return this.http.get<Step[]>("/api/v1/steps")
+    }
+
+    listRuns(state: RunState): Observable<ListRunsData[]> {
+        return this.http.get<ListRunsData[]>(`api/v1/runs/state?state=${state}`)
     }
 
     getStep(id: string): Observable<Step> {
@@ -45,12 +52,17 @@ export class ApiService {
     }
 
     updateStep(step: Step): Observable<void> {
+        let kids = [];
+        if(step.children) {
+            kids = step.children.map(c => c.id)
+        }
+
         return this.http.put<Step>(`api/v1/steps/slim`, {
             id: step.id,
             name: step.name,
             stepType: step.stepType,
             action: step.action,
-            children: step.children.map(c => c.id)
+            children: kids
         }).map(x => null)
     }
 

@@ -2,6 +2,8 @@ package io.paradoxical.aetr.core.graph
 
 import io.paradoxical.aetr.core.model._
 
+case class OrderedRun(run: Run, order: Long)
+
 class RunManager(val root: Run) {
   sync(root)
 
@@ -9,12 +11,18 @@ class RunManager(val root: Run) {
     this(new TreeManager(stepTree).newRun())
   }
 
-  def flatten: List[Run] = {
-    def all0(curr: Run, acc: List[Run]): List[Run] = {
+  def flatten: List[OrderedRun] = {
+    def all0(curr: Run, acc: List[OrderedRun], order: Long = 0): List[OrderedRun] = {
       if (curr.children.isEmpty) {
-        curr :: acc
+        OrderedRun(curr, order) :: acc
       } else {
-        curr :: curr.children.flatMap(c => all0(c, acc)).toList
+        OrderedRun(curr, order) :: curr.children.zipWithIndex.flatMap(c => {
+          val (child, index) = c
+
+          val children = all0(child, acc, order + index + 1)
+
+          children
+        }).toList
       }
     }
 
@@ -34,7 +42,7 @@ class RunManager(val root: Run) {
   }
 
   def completeAll(result: Option[ResultData] = None): Unit = {
-    flatten.foreach(_.state = RunState.Complete)
+    flatten.map(_.run).foreach(_.state = RunState.Complete)
 
     complete(root, result)
   }

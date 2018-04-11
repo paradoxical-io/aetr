@@ -8,6 +8,7 @@ import io.paradoxical.aetr.core.execution.{AdvanceQueuer, Completor, RunToken}
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.server.controllers.conversion.DtoConvertors
+import io.paradoxical.common.extensions.Extensions._
 import io.paradoxical.finatra.Framework
 import java.util.UUID
 import javax.inject.Inject
@@ -49,9 +50,11 @@ class RunsController @Inject()(
   }
 
   getWithDoc("/api/v1/runs/:id") {
-    _.description("Get state of the run tree").request[GetRunRequest].responseWith[RunTreeDto](status = 200)
+    _.description("Get state of the run tree. If the id passed in is not the root, the root related to that tree will be returned").
+      request[GetRunRequest].
+      responseWith[RunTreeDto](status = 200)
   } { r: GetRunRequest =>
-    db.getRunTree(RootId(r.id)).map(converters.toRunResult)
+    db.getRunTreeViaAnyNode(RunInstanceId(r.id)).map(converters.toRunResult)
   }
 
   getWithDoc("/api/v1/runs/active") {
@@ -64,7 +67,8 @@ class RunsController @Inject()(
         x.runDao.state,
         x.runDao.stepTreeId,
         x.stepTreeDao.name,
-        x.runDao.output
+        x.runDao.output,
+        x.runDao.lastUpdatedAt.toEpochMilli
       )))
   }
 
@@ -78,7 +82,8 @@ class RunsController @Inject()(
         x.runDao.state,
         x.runDao.stepTreeId,
         x.stepTreeDao.name,
-        x.runDao.output
+        x.runDao.output,
+        x.runDao.lastUpdatedAt.toEpochMilli
       )))
   }
 
@@ -99,11 +104,13 @@ class RunsController @Inject()(
   postWithDoc("/api/v1/runs/complete") {
     _.description("Complete a run").request[CompleteRunRequest].responseWith[Unit](status = 200)
   } { req: CompleteRunRequest =>
+    logger.info(s"Attempting complete of token $req")
+
     val token = RunToken(req.token)
 
     Future {
       blocking {
-        completor.complete(token, req.result)
+        completor.complete(token, req.request.contentString.trimToOption.map(ResultData))
       }
     }.map(completed =>
       if (!completed) {
@@ -126,7 +133,7 @@ case class RunTreeDto(
   children: Seq[RunTreeDto]
 )
 
-case class CompleteRunRequest(@QueryParam token: String, result: Option[ResultData])
+case class CompleteRunRequest(@QueryParam token: String, @Inject request: Request)
 
 case class RunSlimResult(
   id: RunInstanceId,
@@ -142,7 +149,8 @@ case class GetRunDataResult(
   state: RunState,
   stepTreeId: StepTreeId,
   nodeName: NodeName,
-  result: Option[ResultData]
+  result: Option[ResultData],
+  lastUpdatedAt: Long
 ) {
   val token = RunToken(id, root).asRaw
 }

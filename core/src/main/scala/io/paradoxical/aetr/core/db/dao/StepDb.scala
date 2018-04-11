@@ -165,6 +165,24 @@ class StepDb @Inject()(
     }.map(_ => run.id)
   }
 
+  def getRunTreeViaAnyNode(id: RunInstanceId): Future[Run] = {
+    val tree =
+      for {
+        run <- runs.query.filter(_.id === id).result.head
+
+        rootId = if (run.id == run.root) run.id else run.root
+
+        relatedToRoot <- runs.query.filter(_.root === RunInstanceId(rootId.value)).result
+      } yield {
+        (rootId, relatedToRoot)
+      }
+
+    provider.withDB(tree).flatMap {
+      case (root, related) =>
+        resolveRunFromTreeNodes(RootId(root.value), related)
+    }
+  }
+
   /**
    * Gets the entire run tree from a root
    *
@@ -218,7 +236,7 @@ class StepDb @Inject()(
   def findRelatedRuns(stepTreeId: StepTreeId): Future[Seq[RunDao]] = {
     // TODO: only show roots?
     provider.withDB {
-      runs.query.filter(_.stepTreeId === stepTreeId).result
+      runs.query.filter(r => r.stepTreeId === stepTreeId).result
     }
   }
 

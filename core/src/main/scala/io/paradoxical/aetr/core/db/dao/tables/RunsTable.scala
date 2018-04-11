@@ -16,6 +16,7 @@ case class RunDao(
   root: RunInstanceId,
   parent: Option[RunInstanceId],
   version: Version,
+  order: Long,
   stepTreeId: StepTreeId,
   state: RunState,
   input: Option[ResultData],
@@ -43,6 +44,8 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
 
     def version = column[Version]("version")
 
+    def order = column[Long]("order")
+
     def stepTreeId = column[StepTreeId]("step_id")
 
     def state = column[RunState]("state")
@@ -65,6 +68,7 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
         root,
         parentId,
         version,
+        order,
         stepTreeId,
         state,
         input,

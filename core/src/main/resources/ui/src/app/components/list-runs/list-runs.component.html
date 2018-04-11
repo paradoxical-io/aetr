@@ -1,3 +1,17 @@
-<p>
-  list-runs works!
-</p>
+<div class="container">
+    <select class="form-control"
+            id="stepType"
+            [(ngModel)]="runStateToView"
+            name="stepType"
+            (ngModelChange)="selectState(runStateToView)"
+            required
+    >
+        <option *ngFor="let state of runStates" [value]="state">{{state}}</option>
+    </select>
+
+    <ul *ngFor="let run of runs | orderBy : 'createdAt'" class="list-group list-group-flush">
+        <li class="list-group-item">
+            <span class="link" [routerLink]="['/runs/details/', run.id]">{{run.lastUpdatedAt | date: 'full'}}</span> - {{run.nodeName}} - {{run.state}}
+        </li>
+    </ul>
+</div>

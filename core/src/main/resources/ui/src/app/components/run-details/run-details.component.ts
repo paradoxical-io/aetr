@@ -1,8 +1,8 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {forkJoin} from "rxjs/observable/forkJoin";
 import {ApiService} from "../../services/api.service";
 import {ActivatedRoute} from "@angular/router";
-import {RunTree, Step, RunState} from "../../model/model";
+import {RunState, RunTree} from "../../model/model";
 import {ITreeOptions} from "angular-tree-component";
 
 @Component({
@@ -10,13 +10,35 @@ import {ITreeOptions} from "angular-tree-component";
     templateUrl: './run-details.component.html',
     styleUrls: ['./run-details.component.css']
 })
-export class RunDetailsComponent implements OnInit {
+export class RunDetailsComponent implements OnInit, OnDestroy {
 
     constructor(private route: ActivatedRoute, private api: ApiService) {
     }
 
+    private updateInterval: number;
+
     ngOnInit() {
         this.loadData();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log("registering active tasks watcher");
+
+                this.loadData();
+            } else {
+                this.unwatchTasks()
+            }
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.unwatchTasks();
+    }
+
+    unwatchTasks(): void {
+        console.log("Clearing active tasks watcher");
+
+        clearInterval(this.updateInterval);
     }
 
     run: RunTree;
@@ -57,11 +79,25 @@ export class RunDetailsComponent implements OnInit {
         this.route.paramMap.subscribe(x => {
             let rootId = x.get('id');
 
-            let run = this.api.getRun(rootId);
+            function update() {
+                let run = this.api.getRun(rootId);
 
-            forkJoin([run]).subscribe(results => {
-                this.run = results[0]
-            })
+                forkJoin([run]).subscribe(results => {
+                    this.run = results[0];
+
+                    if(this.complete(run.state)) {
+                        this.unwatchTasks();
+                    }
+                })
+            }
+
+            this.updateInterval = setInterval(update.bind(this), 5000);
+
+            update.call(this);
         })
+    }
+
+    private complete(state: RunState): boolean {
+        return state == this.RunState.Error || state == this.RunState.Complete;
     }
 }

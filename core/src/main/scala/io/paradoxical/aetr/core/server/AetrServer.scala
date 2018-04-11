@@ -8,7 +8,7 @@ import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceI
 import com.twitter.finatra.http.routing.HttpRouter
 import com.twitter.inject.TwitterModule
 import io.paradoxical.aetr.core.lifecycle.Startup
-import io.paradoxical.aetr.core.server.controllers.{PingController, RunsController, StepsController}
+import io.paradoxical.aetr.core.server.controllers._
 import io.paradoxical.aetr.core.server.serialization.JsonModule
 import io.paradoxical.aetr.core.stats.FinagleStatsBridgeReceiver
 import io.paradoxical.ecsv.tasks.server.controllers.UiController
@@ -55,6 +55,7 @@ class AetrServer(override val modules: Seq[Module]) extends HttpServer with Swag
       .add[PingController]
       .add[StepsController]
       .add[RunsController]
+      .add[DebugController]
       .add[UiController]
   }
 }
