@@ -129,7 +129,9 @@ class DbTests extends PostgresDbTestBase {
 
     val storedRoot = db.getRunTree(runRoot.rootId).waitForResult()
 
-    new RunManager(storedRoot).flatten.map(_.id) shouldEqual new RunManager(runRoot).flatten.map(_.id)
+    val flattened = new RunManager(storedRoot).flatten
+
+    flattened.map(_.run.id) shouldEqual new RunManager(runRoot).flatten.map(_.run.id)
   }
 
   it should "list pending runs" in withDb { injector =>

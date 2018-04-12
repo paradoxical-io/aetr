@@ -21,11 +21,13 @@ import {OrderModule} from "ngx-order-pipe";
 import {EditStepParentComponent} from './components/steps/edit/parent/parent.component';
 import {DndModule} from "ng2-dnd";
 import {RunDetailsComponent} from './components/run-details/run-details.component';
+import {EditStepActionComponent} from "./components/steps/edit/action/action.component";
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
     {path: 'steps/details/:id', component: StepDetailsComponent},
     {path: 'steps/edit/parent/:id', component: EditStepParentComponent},
+    {path: 'steps/edit/action/:id', component: EditStepActionComponent},
     {path: 'runs/new/steps/:id', component: CreateRunComponent},
     {path: 'runs/details/:id', component: RunDetailsComponent},
     {path: 'runs/list', component: ListRunsComponent},
@@ -51,6 +53,7 @@ const appRoutes: Routes = [
         ApiComponent,
         HeaderComponent,
         EditStepParentComponent,
+        EditStepActionComponent,
         RunDetailsComponent
     ],
     imports: [

@@ -65,6 +65,16 @@ export class GetRelatedRunsResult {
     runs: RunData[];
 }
 
+export class ListRunsData {
+    id: string;
+    root: string;
+    state: RunState;
+    stepTreeId: string;
+    nodeName: string;
+    result: string;
+    lastUpdatedAt: number;
+}
+
 export class RunTree {
     id: string;
     root: string;

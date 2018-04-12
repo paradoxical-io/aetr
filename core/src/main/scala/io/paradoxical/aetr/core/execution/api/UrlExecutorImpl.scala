@@ -15,6 +15,7 @@ class UrlExecutorImpl @Inject()(
 
   override def execute(token: RunToken, url: URL, data: Option[ResultData]): Try[ExecutionResult] = {
     logger.info(s"Executing run token $token")
+
     Try {
       val port = if (url.getPort == -1) "" else s":${url.getPort}"
 
@@ -27,12 +28,16 @@ class UrlExecutorImpl @Inject()(
       val req = if (data.isDefined) {
         Http(sanitizedUrl).postData(data.get.value)
       } else {
-        Http(sanitizedUrl)
+        Http(sanitizedUrl).postData("")
       }
 
       // Expose the response?
       // Throw on >= 400?
       val resp = req.execute[String]()
+
+      if(resp.isError) {
+        throw new RuntimeException(resp.body)
+      }
 
       logger.trace(s"Got ${resp.code} response for run token = $token} callback url = $url: ${resp.body}")
 

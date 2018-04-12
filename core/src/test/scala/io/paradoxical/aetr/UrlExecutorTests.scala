@@ -36,7 +36,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val recordedRequest = server.takeRequest()
 
-      val expectedPath = s"/execute?aetr=${config.meta.host}/api/v1/complete/${run.token.asRaw}"
+      val expectedPath = s"/execute?aetr=${config.meta.host}/api/v1/runs/complete?token=${run.token.asRaw}"
       assert(recordedRequest.getPath === expectedPath)
       inside(result) {
         case Success(ArbitraryStringExecutionResult(responseBody)) =>
@@ -88,7 +88,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val recordedRequest1 = server.takeRequest()
 
-      val expectedAetrCallbackFmt = s"${config.meta.host}/api/v1/complete/"
+      val expectedAetrCallbackFmt = s"${config.meta.host}/api/v1/runs/complete?token="
       assert(recordedRequest1.getPath === s"/execute?q=1,2&q2=hello&aetr=$expectedAetrCallbackFmt${action1.run.token.asRaw}")
       assert(recordedRequest1.getBody.size() === 0L)
 
