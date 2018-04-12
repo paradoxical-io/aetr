@@ -33,6 +33,9 @@
     </encoder>
   </appender>
 
+  <logger name="org.postgresql.Driver" level="OFF"/>
+  <logger name="unknown.jul.logger" level="OFF"/>
+
   <!-- Slick Logging -->
   <!-- Additivity set to false so we don't propagate to root appenders -->
   <logger name="slick.jdbc.DriverDataSource"              additivity="false" level="${log.slick.jdbc.driverDataSource:-info}">

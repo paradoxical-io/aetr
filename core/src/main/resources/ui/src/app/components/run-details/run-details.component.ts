@@ -50,7 +50,9 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
     @ViewChild('tree') tree;
 
     ngAfterViewInit() {
-        this.tree.treeModel.expandAll();
+        if(this.tree) {
+            this.tree.treeModel.expandAll();
+        }
     }
 
     selectNode(event) {

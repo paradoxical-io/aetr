@@ -29,6 +29,15 @@ lazy val core = project.settings(commonSettings).settings(
       }
     },
 
+    // keep the log level quiet
+    logLevel in assembly := Level.Error,
+
+    assemblyMergeStrategy in assembly := {
+      case PathList(ps @ _*) if ps.contains("node_modules") =>
+        MergeStrategy.discard
+      // relegate back to the previous
+      case x @ _ => (assemblyMergeStrategy in assembly).value(x)
+    },
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % versions.logback,
       "io.paradoxical" %% "paradox-scala-jackson" % versions.paradox.global,

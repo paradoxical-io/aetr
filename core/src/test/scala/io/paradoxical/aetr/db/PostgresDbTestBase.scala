@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Random, Try}
 
 class PostgresDbTestBase extends TestBase {
-  val docker = Postgres.docker()
+  lazy val docker = Postgres.docker()
 
   def withDb(test: Injector => Any): Unit = {
     val testConfig = newDbAndConfig
