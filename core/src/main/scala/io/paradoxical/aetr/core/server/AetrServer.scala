@@ -7,6 +7,7 @@ import com.twitter.finatra.http.HttpServer
 import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
 import com.twitter.inject.TwitterModule
+import com.twitter.util.{Await, Duration}
 import io.paradoxical.aetr.core.lifecycle.Startup
 import io.paradoxical.aetr.core.server.controllers._
 import io.paradoxical.aetr.core.server.serialization.JsonModule
@@ -15,6 +16,15 @@ import io.paradoxical.ecsv.tasks.server.controllers.UiController
 import io.paradoxical.finatra.swagger.{ApiDocumentationConfig, SwaggerDocs}
 
 class AetrServer(override val modules: Seq[Module]) extends HttpServer with SwaggerDocs {
+  // register the shutdown hook
+  Runtime.getRuntime.addShutdownHook(new Thread() {
+    override def run(): Unit = {
+      Await.result(close(Duration.fromSeconds(30)))
+
+      logger.info("Goodbye!")
+    }
+  })
+
   // Manually add the bridge receiver so we don't have to rely on service loading
   override protected def statsReceiverModule: Module = new TwitterModule {
     protected override def configure(): Unit = {
@@ -35,7 +45,13 @@ class AetrServer(override val modules: Seq[Module]) extends HttpServer with Swag
   override protected def jacksonModule: Module = new JsonModule()
 
   protected override def postWarmup(): Unit = {
-    injector.instance[Startup].start()
+    val startup = injector.instance[Startup]
+
+    startup.start()
+
+    onExit {
+      startup.stop()
+    }
 
     super.postWarmup()
   }

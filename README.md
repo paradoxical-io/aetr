@@ -26,3 +26,29 @@ Run
 
 A run is an instance of a step tree. It is a distinct workflow.  Run's store the result of each node and parent nodes determine their results 
 from children.
+
+
+Development
+---
+
+Run `docker-compose up`
+
+If this is your first time, create the db via:
+
+```
+docker run \
+    -e DB_JDBC_URL=jdbc:postgresql://db:5432/aetr \
+    --network aetr_default \
+    paradoxical/aetr:1.0-SNAPSHOT create-db```
+
+```
+
+From then you can now run the server:
+
+```
+docker run -it -p 9999:9999 \
+  -e DB_JDBC_URL=jdbc:postgresql://db:5432/aetr \
+  --network aetr_default \
+  paradoxical/aetr:1.0-SNAPSHOT server
+```
+
