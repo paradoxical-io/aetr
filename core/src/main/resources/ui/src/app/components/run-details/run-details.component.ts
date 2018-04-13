@@ -50,7 +50,7 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
     @ViewChild('tree') tree;
 
     ngAfterViewInit() {
-        if(this.tree) {
+        if (this.tree) {
             this.tree.treeModel.expandAll();
         }
     }
@@ -87,7 +87,7 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
                 forkJoin([run]).subscribe(results => {
                     this.run = results[0];
 
-                    if(this.complete(run.state)) {
+                    if (this.isComplete(run.state)) {
                         this.unwatchTasks();
                     }
                 })
@@ -99,7 +99,7 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
         })
     }
 
-    private complete(state: RunState): boolean {
+    isComplete(state: RunState): boolean {
         return state == this.RunState.Error || state == this.RunState.Complete;
     }
 }

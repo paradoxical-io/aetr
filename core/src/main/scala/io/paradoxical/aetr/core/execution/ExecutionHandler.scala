@@ -25,17 +25,19 @@ class ExecutionHandler @Inject()(storage: StepsDbSync, urlExecutor: UrlExecutor)
         Success(ExecutionResultState(result = None, RunState.Complete))
     }
 
-    val resultState = result.map(_.state).getOrElse(RunState.Error)
+    val nextState = result.map(_.state).getOrElse(RunState.Error)
+
+    val resultData = result.failed.map(throwable => ResultData(throwable.getMessage)).toOption
 
     try {
-      if (storage.trySetRunState(actionable.run.id, root, resultState)) {
-        logger.info(s"Set run state of $actionable to $resultState")
+      if (storage.trySetRunState(actionable.run.id, root, nextState, result = resultData)) {
+        logger.info(s"Set run state of $actionable to $nextState")
       } else {
         logger.info(s"Runs tate of $actionable was already set!")
       }
     } catch {
       case e: Exception =>
-        logger.error(s"Unable to set run state for $actionable to $resultState")
+        logger.error(s"Unable to set run state for $actionable to $nextState")
 
         throw e
     }
