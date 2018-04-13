@@ -37,6 +37,10 @@ class Startup @Inject()(
     logger.info("Dequeue and polling threads started")
   }
 
+  def stop(): Unit = {
+    logger.info("Stopping...")
+  }
+
   private def enqueuePending(): Unit = {
     try {
       val pendingIds = stepsDb.findUnlockedRuns(RunState.Pending).waitForResult()
