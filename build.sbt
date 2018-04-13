@@ -38,6 +38,7 @@ lazy val core = project.settings(commonSettings).settings(
       // relegate back to the previous
       case x @ _ => (assemblyMergeStrategy in assembly).value(x)
     },
+
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % versions.logback,
       "io.paradoxical" %% "paradox-scala-jackson" % versions.paradox.global,

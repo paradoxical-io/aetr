@@ -36,7 +36,15 @@ class UrlExecutorImpl @Inject()(
       val resp = req.execute[String]()
 
       if(resp.isError) {
-        throw new RuntimeException(resp.body)
+        throw new RuntimeException(
+          s"""
+            |{
+            |  "status": "${resp.statusLine}",
+            |  "body": "${resp.body}",
+            |  "code: "${resp.code}"
+            |}
+          """.stripMargin
+        )
       }
 
       logger.trace(s"Got ${resp.code} response for run token = $token} callback url = $url: ${resp.body}")

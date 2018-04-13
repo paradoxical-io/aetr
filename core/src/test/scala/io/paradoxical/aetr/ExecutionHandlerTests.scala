@@ -1,8 +1,8 @@
 package io.paradoxical.aetr
 
 import io.paradoxical.aetr.core.db.StepsDbSync
-import io.paradoxical.aetr.core.execution.{EmptyExecutionResult, ExecutionHandler}
 import io.paradoxical.aetr.core.execution.api.UrlExecutor
+import io.paradoxical.aetr.core.execution.{EmptyExecutionResult, ExecutionHandler}
 import io.paradoxical.aetr.core.graph.RunManager
 import io.paradoxical.aetr.core.model._
 import java.net.URL
@@ -22,17 +22,22 @@ class ExecutionHandlerTests extends TestBase {
 
     val run = new RunManager(tree).root
 
-    val stateResults = ArgumentCaptor.forClass(classOf[RunState])
+    val stateCapture = ArgumentCaptor.forClass(classOf[RunState])
+    val resultsCapture = ArgumentCaptor.forClass(classOf[Option[ResultData]])
 
-    when(urlExecutor.execute(any(), any(), any())).thenReturn(Failure(new RuntimeException("Url execution failed")))
+    val errorMessage = "Url execution failed"
+
+    when(urlExecutor.execute(any(), any(), any())).thenReturn(Failure(new RuntimeException(errorMessage)))
 
     new ExecutionHandler(db, urlExecutor).execute(
       Actionable(run, tree, None)
     )
 
-    verify(db, times(1)).trySetRunState(any(), any(), stateResults.capture(), any())
+    verify(db, times(1)).trySetRunState(any(), any(), stateCapture.capture(), resultsCapture.capture())
 
-    stateResults.getAllValues.asScala.last shouldEqual RunState.Error
+    stateCapture.getAllValues.asScala.last shouldEqual RunState.Error
+
+    resultsCapture.getAllValues.asScala.last shouldEqual Some(ResultData(errorMessage))
   }
 
   it should "mark actions as executing on success" in {

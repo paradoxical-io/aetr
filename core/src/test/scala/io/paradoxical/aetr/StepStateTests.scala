@@ -145,4 +145,19 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     m.getFinalResult shouldEqual Option(ResultData("p0;p1"))
   }
+
+  it should "propagate errors to the root" in new ActionList {
+    val run = new TreeManager(treeRoot).newRun(input = Some(ResultData("seed")))
+
+    val m = new RunManager(run)
+
+    val actionableAction1 = m.next().head
+
+    val failureData = Some(ResultData("foo"))
+
+    m.setState(actionableAction1.run.id, RunState.Error, Some(failureData))
+
+    assert(m.root.state == RunState.Error)
+    assert(m.root.output == failureData)
+  }
 }

@@ -134,6 +134,38 @@ class DbTests extends PostgresDbTestBase {
     flattened.map(_.run.id) shouldEqual new RunManager(runRoot).flatten.map(_.run.id)
   }
 
+  it should "find root trees based on any child in the run heirarchy" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1: Action = Action(name = NodeName("leaf1"))
+
+    val leaf2 = Action(name = NodeName("leaf2"))
+
+    val branch1 = SequentialParent(name = NodeName("branch1"), children = List(leaf1, leaf2))
+
+    val branch2 = SequentialParent(name = NodeName("branch2"), children = List(leaf1, leaf2))
+
+    val branch3 = ParallelParent(name = NodeName("parallel"), children = List(leaf1, leaf2))
+
+    val stepRoot = SequentialParent(name = NodeName("root"), children = List(branch3, branch2, branch1))
+
+    db.upsertStep(stepRoot).waitForResult()
+
+    val manager = new RunManager(stepRoot)
+
+    val runRoot = manager.root
+
+    db.upsertRun(runRoot).waitForResult()
+
+    val leafNodeRun = manager.flatten.find(_.run.repr.id == leaf1.id).get
+
+    assert(leafNodeRun.run.repr.id == leaf1.id)
+
+    val retrievedTree = db.getRunTreeViaAnyNode(leafNodeRun.run.id).waitForResult()
+
+    retrievedTree.id shouldEqual runRoot.id
+  }
+
   it should "list pending runs" in withDb { injector =>
     val db = injector.instance[StepDb]
 

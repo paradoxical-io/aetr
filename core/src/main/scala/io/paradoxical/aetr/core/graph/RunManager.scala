@@ -75,7 +75,7 @@ class RunManager(val root: Run) {
     find(run).foreach(r => {
       r.state = state
 
-      if(result.isDefined) {
+      if (result.isDefined) {
         r.output = result.get
       }
 
@@ -105,17 +105,23 @@ class RunManager(val root: Run) {
     if (run.children.isEmpty) {
       run.output
     } else {
-      if (determineState(run) == RunState.Complete) {
+      if (determineState(run).isCompleteState) {
         run.repr match {
-          case x: Parent =>
-            x match {
-              case p: SequentialParent =>
-                run.children.lastOption.flatMap(_.output)
-              case p: ParallelParent =>
-                val results = run.children.flatMap(_.output)
+          case _: SequentialParent =>
+            // the last completed child
+            // either they are all complete and so the last item is the value we want
+            // or one errored out and we want to grab its state
+            run.children.filter(_.state.isCompleteState).lastOption.flatMap(_.output)
+          case p: ParallelParent =>
+            // reduce all parallel errors
+            if (run.children.exists(_.state == RunState.Error)) {
+              Some(run.children.filter(_.state == RunState.Error).flatMap(_.output).mkString(";")).map(ResultData)
+            } else {
+              val results = run.children.flatMap(_.output)
 
-                p.reducer.reduce(results).map(p.mapper.map)
+              p.reducer.reduce(results).map(p.mapper.map)
             }
+
           case action: Action => run.output.map(action.mapper.map)
         }
       } else {
