@@ -20,6 +20,8 @@ class AetrServer(override val modules: Seq[Module]) extends HttpServer with Swag
   Runtime.getRuntime.addShutdownHook(new Thread() {
     override def run(): Unit = {
       Await.result(close(Duration.fromSeconds(30)))
+
+      logger.info("Goodbye!")
     }
   })
 
