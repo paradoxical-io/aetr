@@ -3,8 +3,8 @@ package io.paradoxical.aetr.core.server.controllers
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.exceptions.ConflictException
 import com.twitter.finatra.request.RouteParam
-import io.paradoxical.aetr.core.db.dao.StepDb
 import io.paradoxical.aetr.core.db.dao.tables.StepTreeDao
+import io.paradoxical.aetr.core.db.dao.{StepChildWithMapper, StepDb}
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.server.controllers.conversion.DtoConvertors
 import io.paradoxical.finatra.Framework
@@ -57,7 +57,8 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
       name = r.name,
       stepType = r.stepType,
       action = r.action,
-      children = r.children
+      children = r.children.map(_.map(id => StepSlimChild(id))),
+      reducer = None
     )
 
     converters.toStep(slim).map(db.upsertStep).map(_ => CreateStepResponse(slim.id))
@@ -73,7 +74,7 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
   putWithDoc("/api/v1/steps/slim") {
     _.description("Upsert slim steps").request[StepsSlimDto].responseWith[Unit](status = 200)
   } { r: StepsSlimDto =>
-    if (r.children.exists(_.contains(r.id))) {
+    if (r.children.map(_.map(_.id)).exists(_.contains(r.id))) {
       throw ConflictException("Cannot add a child that is also the root")
     }
 
@@ -95,11 +96,11 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
   postWithDoc("/api/v1/steps/:id/children") {
     _.description("Sets the children for the id").request[AddChildrenRequest].responseWith[Unit](status = 200)
   } { r: AddChildrenRequest =>
-    if (r.children.contains(r.id)) {
+    if (r.children.map(_.id).contains(r.id)) {
       throw ConflictException("Cannot add a child that is also the root")
     }
 
-    db.setChildren(r.id, r.children)
+    db.setChildren(r.id, r.children.map(c => StepChildWithMapper(c.id, c.mapper)))
   }
 
   private def toRoot(item: StepTreeDao): StepsRootDto = {
@@ -113,7 +114,7 @@ class StepsController @Inject()(db: StepDb, converters: DtoConvertors)(implicit 
 
 case class DeleteStepRequest(@RouteParam id: StepTreeId)
 
-case class AddChildrenRequest(@RouteParam id: StepTreeId, children: List[StepTreeId])
+case class AddChildrenRequest(@RouteParam id: StepTreeId, children: List[StepSlimChild])
 
 case class GetStepsId(@RouteParam id: StepTreeId)
 
@@ -131,7 +132,13 @@ case class StepsSlimDto(
   name: NodeName,
   stepType: StepType,
   action: Option[Execution],
-  children: Option[List[StepTreeId]]
+  children: Option[List[StepSlimChild]],
+  reducer: Option[Reducer]
+)
+
+case class StepSlimChild(
+  id: StepTreeId,
+  mapper: Option[Mapper] = None
 )
 
 case class StepsFatDto(
@@ -139,6 +146,8 @@ case class StepsFatDto(
   name: NodeName,
   stepType: StepType,
   action: Option[Execution],
+  mapper: Option[Mapper] = None,
+  reducer: Option[Reducer] = None,
   children: Option[List[StepsFatDto]]
 )
 

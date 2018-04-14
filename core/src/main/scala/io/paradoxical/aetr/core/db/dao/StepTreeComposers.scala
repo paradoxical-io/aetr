@@ -14,16 +14,28 @@ class StepTreeComposer {
    * @return
    */
   def reconstitute(bag: Seq[StepTreeDao], stepChildren: Seq[StepChildrenDao]): Seq[StepTree] = {
-    def getChildren(id: StepTreeId): Seq[StepTreeDao] = {
-      val children = stepChildren.filter(_.id == id).sortBy(_.childOrder).map(_.childId)
+    def getChildren(id: StepTreeId): Seq[(StepTreeDao, StepChildrenDao)] = {
+      val children = stepChildren.filter(_.id == id).sortBy(_.childOrder)
 
-      children.flatMap(x => bag.find(_.id == x))
+      children.flatMap(x => {
+        val foundChild = bag.find(_.id == x.childId)
+
+        foundChild.map(c => (c, x))
+      })
     }
 
     def resolve(stepTreeDao: StepTreeDao): StepTree = {
-      val childrenDaos = getChildren(stepTreeDao.id)
+      val childList = getChildren(stepTreeDao.id)
 
-      lazy val childrenSteps = childrenDaos.map(resolve).toList
+      val childLookup = childList.map(x => (x._1.id, x._2.childOrder) -> x).toMap
+
+      lazy val childrenSteps = childList.map(c => resolve(c._1)).zipWithIndex.map {
+        case (child, index) =>
+          // reset the mapper given the childs order from the db
+          val mapper = childLookup((child.id, index))._2.mapper
+
+          child.withMapper(mapper)
+      }.toList
 
       stepTreeDao.stepType match {
         case StepType.Sequential =>
@@ -51,14 +63,17 @@ class StepTreeComposer {
   }
 }
 
+case class StepChildWithMapper(id: StepTreeId, mapper: Option[Mapper])
+
 object StepTreeComposer {
-  def childrenToDao(parent: StepTreeId, children: List[StepTreeId]): Seq[StepChildrenDao] = {
+  def childrenToDao(parent: StepTreeId, children: List[StepChildWithMapper]): Seq[StepChildrenDao] = {
     children.zipWithIndex.map {
       case (child, order) =>
         StepChildrenDao(
           id = parent,
           childOrder = order,
-          childId = child
+          childId = child.id,
+          child.mapper
         )
     }
   }
@@ -79,7 +94,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
     flattened.flatMap(item => {
       item match {
         case p: Parent =>
-          StepTreeComposer.childrenToDao(p.id, p.children.map(_.id))
+          StepTreeComposer.childrenToDao(p.id, p.children.map(child => StepChildWithMapper(child.id, child.mapper)))
         case _: Action =>
           Nil
       }

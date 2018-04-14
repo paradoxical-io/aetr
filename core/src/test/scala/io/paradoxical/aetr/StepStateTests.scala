@@ -11,7 +11,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   trait ActionList {
     val rootId = StepTreeId.next
 
-    val action1: Action = Action(id = StepTreeId.next, NodeName("action1"), mapper = Mappers.Function(res => ResultData(res.value + "_mapped")))
+    val action1: Action = Action(id = StepTreeId.next, NodeName("action1"), mapper = Some(Mappers.Function(res => ResultData(res.value + "_mapped"))))
     val action2 = Action(id = StepTreeId.next, NodeName("action2"))
     val action3 = Action(id = StepTreeId.next, NodeName("action3"))
 

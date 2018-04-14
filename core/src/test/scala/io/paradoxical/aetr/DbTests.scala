@@ -2,7 +2,7 @@ package io.paradoxical.aetr
 
 import com.google.inject.Guice
 import com.twitter.util.CountDownLatch
-import io.paradoxical.aetr.core.db.dao.{StepDb, VersionMismatchError}
+import io.paradoxical.aetr.core.db.dao.{StepChildWithMapper, StepDb, VersionMismatchError}
 import io.paradoxical.aetr.core.db.{DbInitializer, StepsDbSync}
 import io.paradoxical.aetr.core.execution.ExecutionHandler
 import io.paradoxical.aetr.core.execution.api.UrlExecutor
@@ -41,22 +41,57 @@ class DbTests extends PostgresDbTestBase {
 
     db.upsertStep(leaf1).waitForResult()
 
-    db.setChildren(parent.id, List(leaf1.id)).waitForResult()
+    db.setChildrenNoMappers(parent.id, List(leaf1.id)).waitForResult()
 
     db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children.map(_.id) shouldEqual List(leaf1.id)
 
-    db.setChildren(parent.id, Nil).waitForResult()
+    db.setChildrenNoMappers(parent.id, Nil).waitForResult()
 
     db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children shouldEqual Nil
   }
 
-  it should "save mappers and reducers" in withDb { injector =>
+  it should "attach children and detach children with mappers" in withDb { injector =>
     val db = injector.instance[StepDb]
 
-    val parent = ParallelParent(name = NodeName("leaf1"), mapper = Mappers.Identity(), reducer = Reducers.Last())
+    val leaf1 = Action(name = NodeName("leaf1"))
+
+    val parent = SequentialParent(name = NodeName("parent"))
 
     db.upsertStep(parent).waitForResult()
 
+    db.upsertStep(leaf1).waitForResult()
+
+    db.setChildren(parent.id,
+      List(
+        StepChildWithMapper(leaf1.id, Some(Mappers.Identity())),
+        StepChildWithMapper(leaf1.id, Some(Mappers.Nashorn("foo")))
+      )
+    ).waitForResult()
+
+    val children: Seq[StepTree] = db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children
+
+    children.head.mapper shouldEqual Some(Mappers.Identity())
+    children.drop(1).head.mapper shouldEqual Some(Mappers.Nashorn("foo"))
+
+    db.setChildrenNoMappers(parent.id, Nil).waitForResult()
+
+    db.getStep(parent.id).waitForResult().asInstanceOf[SequentialParent].children shouldEqual Nil
+  }
+
+  it should "set and retrieve ordered child mappers on step tree upsertion" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1 = Action(name = NodeName("leaf1"), mapper = Some(Mappers.Nashorn("leaf1")))
+    val leaf2 = Action(name = NodeName("leaf2"), mapper = Some(Mappers.Nashorn("leaf2")))
+
+    val parent = SequentialParent(name = NodeName("parent"), children = List(leaf1, leaf2))
+
+    db.upsertStep(parent).waitForResult()
+
+    // a child by itself has no mapper
+    db.getStep(leaf1.id).waitForResult().mapper shouldBe None
+
+    // however parents that have ordered childrens should have mappers
     db.getStep(parent.id).waitForResult() shouldEqual parent
   }
 

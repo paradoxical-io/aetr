@@ -8,7 +8,6 @@ import jdk.nashorn.api.scripting.JSObject
 @JsonTypeInfo(
   use = JsonTypeInfo.Id.NAME,
   include = JsonTypeInfo.As.PROPERTY,
-  defaultImpl = classOf[NoOp],
   property = "type")
 @JsonSubTypes(value = Array(
   new Type(value = classOf[Mappers.Identity], name = "no-op"),

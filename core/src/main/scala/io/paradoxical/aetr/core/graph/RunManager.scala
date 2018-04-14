@@ -119,10 +119,10 @@ class RunManager(val root: Run) {
             } else {
               val results = run.children.flatMap(_.output)
 
-              p.reducer.reduce(results).map(p.mapper.map)
+              p.reducer.reduce(results)
             }
 
-          case action: Action => run.output.map(action.mapper.map)
+          case action: Action => run.output.map(action.mapper.getOrElse(Mappers.Identity()).map)
         }
       } else {
         None
@@ -149,7 +149,7 @@ class RunManager(val root: Run) {
                 // NOTE that mappers are not applied to root seed data
                 run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
                   run.repr match {
-                    case canMap: MapsResult => run.output.map(canMap.mapper.map)
+                    case canMap: MapsResult => run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
                     case _ => run.output
                   }
                 })
