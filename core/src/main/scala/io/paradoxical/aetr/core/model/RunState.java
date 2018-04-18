@@ -13,7 +13,7 @@ public enum RunState {
         this.isCompleteState = isCompleteState;
     }
 
-    public boolean isCompleteState() {
+    public boolean isTerminalState() {
         return isCompleteState;
     }
 }

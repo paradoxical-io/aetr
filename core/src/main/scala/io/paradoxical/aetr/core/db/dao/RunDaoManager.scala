@@ -23,6 +23,7 @@ class RunDaoManager @Inject()() {
           rootId = rootId,
           version = r.version,
           state = r.state,
+          input = r.input,
           output = r.output,
           repr = steps(r.stepTreeId),
           createdAt = r.createdAt,

@@ -31,6 +31,10 @@
                             [dragData]="child"
                             [dragEnabled]="true">
                             {{child.name}}
+
+                            <div *ngIf="step.stepType == StepType.Sequential">
+                                <app-mapper-edit [step]="child"></app-mapper-edit>
+                            </div>
                         </li>
                     </ul>
                 </div>

@@ -1,6 +1,6 @@
 package io.paradoxical.aetr.core.server.controllers
 
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.finatra.request.QueryParam
 import io.paradoxical.finatra.Framework
 import io.paradoxical.finatra.execution.TwitterExecutionContextProvider
@@ -14,13 +14,15 @@ class DebugController @Inject()() extends Framework.RestApi {
   post("/debug/api/v1/execute") { req: DebugExecuteRequest =>
     logger.info(s"Scheduling request to ${req.aetr} in ${req.waitTimeSeconds} seconds")
 
+    val payload = Option(req.request.contentString).getOrElse(System.currentTimeMillis().toString)
+
     executor.schedule(new Runnable {
       override def run(): Unit = {
         logger.info(s"Processing ${req.aetr}")
 
-       val result = Http(req.aetr).postData(System.currentTimeMillis().toString).execute[String]()
+        val result = Http(req.aetr).postData(payload).execute[String]()
 
-        if(result.is2xx) {
+        if (result.is2xx) {
           logger.info("Successfully completed")
         } else {
           logger.warn("Unable to complete")
@@ -32,4 +34,4 @@ class DebugController @Inject()() extends Framework.RestApi {
   }
 }
 
-case class DebugExecuteRequest(@QueryParam aetr: String, @QueryParam waitTimeSeconds: Int = 10)
+case class DebugExecuteRequest(@QueryParam aetr: String, @QueryParam waitTimeSeconds: Int = 1, @Inject request: Request)

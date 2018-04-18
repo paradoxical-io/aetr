@@ -19,8 +19,19 @@ export class Step {
     id: string;
     name: string;
     stepType: StepType;
+    mapper: Mapper;
     action: Execution;
     children: Step[];
+}
+
+export class NashornMapper implements Mapper {
+    type = MapperType.js;
+
+    js: string;
+}
+
+export interface Mapper {
+    type: MapperType;
 }
 
 export interface Execution {
@@ -38,6 +49,10 @@ export class CreateRunResult {
 
 export enum ExecutionType {
     api = "api"
+}
+
+export enum MapperType {
+    js = "js"
 }
 
 export enum StepType {

@@ -16,7 +16,7 @@ class Completor @Inject()(
   protected val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
   def complete(runToken: RunToken, data: Option[ResultData]): Boolean = {
-    logger.info(s"Completing $runToken")
+    logger.info(s"Completing $runToken with data '${data.map(_.value).getOrElse("")}'")
 
     def completeSafe(retry: Int): Boolean = {
       if (retry >= serviceConfig.maxAtomicRetries) {

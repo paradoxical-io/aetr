@@ -105,15 +105,26 @@ class RunManager(val root: Run) {
     if (run.children.isEmpty) {
       run.output
     } else {
-      if (determineState(run).isCompleteState) {
+      if (determineState(run).isTerminalState) {
         run.repr match {
           case _: SequentialParent =>
             // the last completed child
             // either they are all complete and so the last item is the value we want
             // or one errored out and we want to grab its state
-            run.children.filter(_.state.isCompleteState).lastOption.flatMap(_.output)
+            run.children.filter(_.state.isTerminalState).lastOption.flatMap(lastchild => {
+              // if we're complete perform a map
+              if (lastchild.state == RunState.Complete) {
+                lastchild.output.map(out => {
+                  lastchild.repr.mapper.getOrElse(Mappers.Identity()).map(out)
+                })
+              } else {
+                // otherwise return the raw output
+                lastchild.output
+              }
+            })
+
           case p: ParallelParent =>
-            // reduce all parallel errors
+            // reduce all parallel errors to be concated together
             if (run.children.exists(_.state == RunState.Error)) {
               Some(run.children.filter(_.state == RunState.Error).flatMap(_.output).mkString(";")).map(ResultData)
             } else {
@@ -149,7 +160,9 @@ class RunManager(val root: Run) {
                 // NOTE that mappers are not applied to root seed data
                 run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
                   run.repr match {
-                    case canMap: MapsResult => run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
+                    case canMap: MapsResult => {
+                      run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
+                    }
                     case _ => run.output
                   }
                 })

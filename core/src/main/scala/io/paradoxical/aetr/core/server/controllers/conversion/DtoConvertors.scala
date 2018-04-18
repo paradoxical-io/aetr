@@ -68,7 +68,8 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
       name = stepTree.name,
       action = action,
       children = children,
-      stepType = typ
+      stepType = typ,
+      mapper = stepTree.mapper
     )
   }
 
@@ -78,6 +79,7 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
         Action(
           id = step.id,
           name = step.name,
+          mapper = step.mapper,
           execution = execution
         )
       case None =>
@@ -86,12 +88,14 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
             SequentialParent(
               id = step.id,
               name = step.name,
-              children = step.children.getOrElse(Nil).map(toStep)
+              children = step.children.getOrElse(Nil).map(toStep),
+              mapper = step.mapper
             )
           case StepType.Parallel =>
             ParallelParent(
               id = step.id,
               name = step.name,
+              mapper = step.mapper,
               children = step.children.getOrElse(Nil).map(toStep)
             )
           case _ => ???
