@@ -5,7 +5,9 @@ import io.paradoxical.aetr.core.model._
 case class OrderedRun(run: Run, order: Long)
 
 class RunManager(val root: Run) {
-  sync(root)
+  if(!root.state.isTerminalState) {
+    sync(root)
+  }
 
   def this(stepTree: StepTree) {
     this(new TreeManager(stepTree).newRun())
