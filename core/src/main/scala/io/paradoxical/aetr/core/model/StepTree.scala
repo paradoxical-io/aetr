@@ -50,7 +50,7 @@ trait MapsResult {
 }
 
 trait ReducesResult {
-  val reducer: Reducer = Reducers.Last()
+  val reducer: Reducer = Reducers.NoOp()
 }
 
 case class SequentialParent(
@@ -73,7 +73,7 @@ case class ParallelParent(
   name: NodeName,
   children: List[StepTree] = Nil,
   mapper: Option[Mapper] = None,
-  override val reducer: Reducer = Reducers.Last()
+  override val reducer: Reducer = Reducers.NoOp()
 ) extends Parent with ReducesResult {
   override def addTree(stepTree: StepTree): Parent = {
     copy(children = children :+ stepTree)

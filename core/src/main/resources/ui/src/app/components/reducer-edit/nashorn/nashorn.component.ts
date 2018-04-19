@@ -1,19 +1,20 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {MapperType, NashornMapper, NashornReducer, Step} from "../../model/model";
+import {NashornReducer, ReducerType, Step} from "../../../model/model";
 
 @Component({
-    selector: 'app-mapper-edit',
-    templateUrl: './mapper-edit.component.html',
-    styleUrls: ['./mapper-edit.component.css']
+  selector: 'app-nashorn',
+  templateUrl: './nashorn.component.html',
+  styleUrls: ['./nashorn.component.css']
 })
-export class MapperEditComponent implements OnInit {
+export class NashornComponent implements OnInit {
+
     @Input() step: Step;
 
-    mappingPlaceHolder: string = "function apply(data) { \n\
+    reducerPlaceHolder: string = "function apply(data) { \n\
     return data; \n\
 }";
 
-    js: string = this.mappingPlaceHolder;
+    js: string = this.reducerPlaceHolder;
 
     constructor() {
     }
@@ -21,8 +22,8 @@ export class MapperEditComponent implements OnInit {
     errorText: string = "";
 
     ngOnInit() {
-        if (this.step.mapper && this.step.mapper.type == MapperType.js) {
-            let existing = (<NashornMapper>this.step.mapper).js;
+        if (this.step.reducer && this.step.reducer.type == ReducerType.js) {
+            let existing = (<NashornReducer>this.step.reducer).js;
 
             if(existing.length > 0) {
                 this.js = existing
@@ -35,12 +36,12 @@ export class MapperEditComponent implements OnInit {
 
         if (this.js && this.js.length > 0) {
             if (this.js.indexOf("function apply(data)") == -1 || this.js.indexOf("return ") == -1) {
-                this.errorText = "Mappers must have a javascript function of the signature:" +
+                this.errorText = "Reducers must have a javascript function of the signature:" +
                     " 'function apply(data){ ... }' with a valid return statement. " +
                     "Mapping function will not be applied"
             } else {
-                this.step.mapper = <NashornMapper>{
-                    type: MapperType.js,
+                this.step.reducer = <NashornReducer>{
+                    type: ReducerType.js,
                     js: this.js
                 };
             }
@@ -48,4 +49,5 @@ export class MapperEditComponent implements OnInit {
             this.step.mapper = undefined;
         }
     }
+
 }

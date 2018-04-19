@@ -20,8 +20,23 @@ export class Step {
     name: string;
     stepType: StepType;
     mapper: Mapper;
+    reducer: Reducer;
     action: Execution;
     children: Step[];
+}
+
+export class NashornReducer implements Reducer {
+    type = ReducerType.js;
+
+    js: string;
+}
+
+export interface Reducer {
+    type: ReducerType;
+}
+
+export interface Mapper {
+    type: MapperType;
 }
 
 export class NashornMapper implements Mapper {
@@ -49,6 +64,12 @@ export class CreateRunResult {
 
 export enum ExecutionType {
     api = "api"
+}
+
+export enum ReducerType {
+    js = "js",
+    last = "last",
+    none = 'no-op'
 }
 
 export enum MapperType {

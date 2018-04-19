@@ -1,0 +1,12 @@
+<label for="stepType">Reducer Type</label>
+<select class="form-control" id="stepType" [(ngModel)]="step.reducer.type" name="reducerType">
+    <option [selected]="step.reducer.type == ReducerType.none" value="{{ReducerType.none}}">None</option>
+    <option [selected]="step.reducer.type == ReducerType.js" value="{{ReducerType.js}}">Javascript</option>
+    <option [selected]="step.reducer.type  == ReducerType.last" value="{{ReducerType.last}}">Last item</option>
+</select>
+
+<div [ngSwitch]="step.reducer.type">
+    <div class="container" *ngSwitchCase="ReducerType.js">
+        <app-nashorn [step]="step"></app-nashorn>
+    </div>
+</div>

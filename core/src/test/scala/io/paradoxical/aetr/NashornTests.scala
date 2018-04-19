@@ -13,6 +13,17 @@ class NashornTests extends TestBase {
       """.stripMargin).map(ResultData("bar")) shouldEqual ResultData("barfoo")
   }
 
+  it should "fail when accessing java types" in {
+    assertThrows[Exception] {
+      Mappers.Nashorn(
+        """
+          |function apply(data) {
+          |   var HashMap = Java.type("java.util.HashMap")
+          |}
+        """.stripMargin).map(ResultData("bar"))
+    }
+  }
+
   it should "access object data if its structured" in {
     val js =   """
                  |function apply(data) {
@@ -38,6 +49,15 @@ class NashornTests extends TestBase {
         |   return data[0] + "foo"
         |}
       """.stripMargin).reduce(List(ResultData("bar"))) shouldEqual Some(ResultData("barfoo"))
+  }
+
+  it should "join items" in {
+    Reducers.Nashorn(
+      """
+        |function apply(data) {
+        |   return data.join("")
+        |}
+      """.stripMargin).reduce(List(ResultData("bar"), ResultData("baz"))) shouldEqual Some(ResultData("barbaz"))
   }
 
   it should "return None if null is returned" in {

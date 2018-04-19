@@ -48,6 +48,7 @@ class StepTreeComposer {
           ParallelParent(
             id = stepTreeDao.id,
             name = stepTreeDao.name,
+            reducer = stepTreeDao.reducer.getOrElse(Reducers.NoOp()),
             children = childrenSteps
           )
         case StepType.Action =>
@@ -111,6 +112,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Sequential,
+              reducer = None,
               execution = None
             )
           case p: ParallelParent =>
@@ -118,6 +120,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Parallel,
+              reducer = Some(p.reducer),
               execution = None
             )
         }
@@ -126,7 +129,8 @@ class StepTreeDecomposer(stepTree: StepTree) {
           id = p.id,
           name = p.name,
           stepType = StepType.Action,
-          execution = Some(p.execution)
+          execution = Some(p.execution),
+          reducer = None
         )
     }
   }

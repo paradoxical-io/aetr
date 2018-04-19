@@ -67,6 +67,7 @@ export class ApiService {
             name: step.name,
             stepType: step.stepType,
             action: step.action,
+            reducer: step.reducer,
             children: kids
         }).map(x => null)
     }

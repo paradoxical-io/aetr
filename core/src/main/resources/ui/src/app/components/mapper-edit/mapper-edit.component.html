@@ -2,10 +2,10 @@
     Mapping function:
     <textarea class="form-control"
               id="mapper"
-              placeholder="{{mappingPlaceHolder}}"
               [(ngModel)]="js"
               name="mapper"
-              (keydown)="setData()"></textarea>
+              rows="5"
+              (keyup)="setData()"></textarea>
 
     <div class="bg-warning">
         {{errorText}}

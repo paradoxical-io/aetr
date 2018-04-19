@@ -49,18 +49,18 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
   }
 
   def fromStep(stepTree: StepTree): StepsFatDto = {
-    val (action, children, typ) =
+    val (action, reducer, children, typ) =
       stepTree match {
         case p: Parent =>
-          val typ = p match {
+          val (typ, reducer) = p match {
             case _: SequentialParent =>
-              StepType.Sequential
-            case _: ParallelParent =>
-              StepType.Parallel
+              (StepType.Sequential, None)
+            case p: ParallelParent =>
+              (StepType.Parallel, Some(p.reducer))
           }
-          (None, Some(p.children.map(fromStep)), typ)
+          (None, reducer, Some(p.children.map(fromStep)), typ)
         case a: Action =>
-          (Some(a.execution), None, StepType.Action)
+          (Some(a.execution), None, None, StepType.Action)
       }
 
     StepsFatDto(
@@ -69,6 +69,7 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
       action = action,
       children = children,
       stepType = typ,
+      reducer = reducer,
       mapper = stepTree.mapper
     )
   }
@@ -96,6 +97,7 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
               id = step.id,
               name = step.name,
               mapper = step.mapper,
+              reducer = step.reducer.getOrElse(Reducers.NoOp()),
               children = step.children.getOrElse(Nil).map(toStep)
             )
           case _ => ???

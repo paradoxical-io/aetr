@@ -11,6 +11,7 @@ case class StepTreeDao(
   id: StepTreeId,
   name: NodeName,
   stepType: StepType,
+  reducer: Option[Reducer],
   execution: Option[Execution],
   createdAt: Instant = Instant.now(),
   lastUpdatedAt: Instant = Instant.now()
@@ -31,6 +32,8 @@ class Steps @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) exten
 
     def stepType = column[StepType]("type")
 
+    def reducer = column[Option[Reducer]]("reducer")
+
     def execution = column[Option[Execution]]("execution")
 
     def createdAt = column[Instant]("created_at")
@@ -42,6 +45,7 @@ class Steps @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) exten
         id,
         name,
         stepType,
+        reducer,
         execution,
         createdAt,
         lastUpdatedAt

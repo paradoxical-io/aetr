@@ -33,7 +33,13 @@ class Completor @Inject()(
 
           None
         } else {
-          manager.complete(run, data)
+          try {
+            manager.complete(run, data)
+          } catch {
+            case e: Exception =>
+              // if we fail to complete due to mapping or reduction errors, fail the entire chain
+              manager.setState(runToken.runId, RunState.Error, result = Some(Some(ResultData(e.getMessage))))
+          }
 
           Some(manager.root)
         }
