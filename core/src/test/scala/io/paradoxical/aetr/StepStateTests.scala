@@ -110,13 +110,13 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "flatten step trees" in new ActionList {
-    new TreeManager(treeRoot).flatten shouldEqual List(
+    new TreeManager(treeRoot).flatten.map(_.tree) shouldEqual List(
       treeRoot, sequentialParent, action1, action2, parallelParent, action3, action4
     )
   }
 
   it should "flatten run lists" in new ActionList {
-    new RunManager(treeRoot).flatten.map(_.run.repr) shouldEqual new TreeManager(treeRoot).flatten
+    new RunManager(treeRoot).flatten.map(_.run.repr) shouldEqual new TreeManager(treeRoot).flatten.map(_.tree)
   }
 
   it should "pass the result of the previous into the current" in new ActionList {
