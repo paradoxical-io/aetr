@@ -26,7 +26,7 @@ class RunsController @Inject()(
     db.getStep(req.id).
       map(stepTree => new RunManager(stepTree).root).
       flatMap(r => {
-        db.upsertRun(r, req.input).map(instanceId => {
+        db.upsertRun(r, Some(req.input)).map(instanceId => {
           advanceQueuer.enqueue(r.rootId)
 
           instanceId

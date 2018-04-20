@@ -101,7 +101,9 @@ class RunManager(val root: Run) {
     }
   }
 
-  def getFinalResult: Option[ResultData] = getResult(root)
+  def getFinalResult: Option[ResultData] = {
+    root.output
+  }
 
   def getResult(run: Run): Option[ResultData] = {
     if (run.children.isEmpty) {
@@ -148,6 +150,7 @@ class RunManager(val root: Run) {
   }
 
   private def next(run: Run, data: Option[ResultData]): Seq[Actionable] = {
+
     run.repr match {
       case x: Parent =>
         x match {

@@ -34,4 +34,4 @@ class DebugController @Inject()() extends Framework.RestApi {
   }
 }
 
-case class DebugExecuteRequest(@QueryParam aetr: String, @QueryParam waitTimeSeconds: Int = 1, @Inject request: Request)
+case class DebugExecuteRequest(@QueryParam aetr: String, @QueryParam waitTimeSeconds: Int = 5, @Inject request: Request)
