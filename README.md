@@ -25,6 +25,22 @@ AETR can execute trees in parallel or in sequence, and it can map data from one 
 
 Think of aetr as like a very simplified version of amazon workflow, where it's optimized to only execute POST calls on already existing API's that you manage.
 
+Requirements
+---
+
+AETR needs a postgres 10+ backing DB.  Point the JDBC url to it via env vars:
+
+```
+docker run -it -p 9999:9999 \
+  -e DB_JDBC_URL=jdbc:postgresql://db:5432/aetr \
+  --network aetr_default \
+  paradoxical/aetr:1.0-SNAPSHOT server
+```
+
+Other configuration options can be seen in [the conf file](https://github.com/paradoxical-io/aetr/blob/master/core/src/main/resources/reference.conf)
+
+JVM args can be passed to aetr for JVM tuning via the `JVM_ARGS` environment variable.
+
 
 Demo
 --
