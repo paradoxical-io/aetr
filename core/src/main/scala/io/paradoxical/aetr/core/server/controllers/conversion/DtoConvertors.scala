@@ -115,15 +115,19 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
         ))
       case None =>
         val dtoChildLookup = stepDto.children.getOrElse(Nil).map(c => c.id -> c).toMap
-        stepDb.getSteps(dtoChildLookup.keys.toList).map(children => {
+
+        stepDb.getSteps(dtoChildLookup.keys.toList).map(hydrated => {
+          val children = stepDto.children.getOrElse(Nil)
 
           // hydrate the children from the database but then
           // populate the mapper we want from the input DTO
           val childrenWithMappers = children.map(child => {
+            val hydratedChild = hydrated.find(_.id == child.id).get
+
             if (dtoChildLookup.contains(child.id)) {
-              child.withMapper(dtoChildLookup(child.id).mapper)
+              hydratedChild.withMapper(dtoChildLookup(child.id).mapper)
             } else {
-              child
+              hydratedChild
             }
           })
 
@@ -138,7 +142,7 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
               ParallelParent(
                 id = stepDto.id,
                 name = stepDto.name,
-                children = children,
+                children = childrenWithMappers,
                 reducer = stepDto.reducer.getOrElse(Reducers.NoOp())
               )
             case StepType.Action => ???

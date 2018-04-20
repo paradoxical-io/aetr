@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {ApiService} from "../../services/api.service";
 import {forkJoin} from "rxjs/observable/forkJoin";
@@ -10,7 +10,7 @@ import {RunData, Step, StepRoot, StepType} from "../../model/model";
     templateUrl: './step-details.component.html',
     styleUrls: ['./step-details.component.css'],
 })
-export class StepDetailsComponent implements OnInit {
+export class StepDetailsComponent implements OnInit, AfterViewInit {
 
     constructor(private route: ActivatedRoute, private api: ApiService) {
     }
@@ -41,6 +41,10 @@ export class StepDetailsComponent implements OnInit {
 
     unselectNode(event) {
         this.selectedStep = undefined;
+    }
+
+    expand() {
+        this.tree.treeModel.expandAll();
     }
 
     getOptions(): ITreeOptions {

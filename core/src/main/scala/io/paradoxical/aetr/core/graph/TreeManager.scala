@@ -4,11 +4,28 @@ import io.paradoxical.aetr.core.model
 import io.paradoxical.aetr.core.model._
 import java.util.UUID
 
+case class OrderedTree(tree: StepTree, parent: Option[StepTree], order: Int)
+
 class TreeManager(root: StepTree) {
   private lazy val rootId = RootId(UUID.randomUUID())
 
-  lazy val flatten: List[StepTree] = {
-    getChildren(root)
+  lazy val flatten: List[OrderedTree] = {
+    def all0(curr: StepTree, parent: Option[StepTree], acc: List[OrderedTree], order: Int = 0): List[OrderedTree] = {
+      curr match {
+        case p: Parent =>
+          OrderedTree(curr, parent, order) :: p.children.zipWithIndex.flatMap(c => {
+            val (child, index) = c
+
+            val children = all0(child, Some(curr), acc, index)
+
+            children
+          })
+        case a: Action =>
+          OrderedTree(curr, parent, order) :: acc
+      }
+    }
+
+    all0(root, parent = None, acc = Nil)
   }
 
   // gets the Nth child at the current branch

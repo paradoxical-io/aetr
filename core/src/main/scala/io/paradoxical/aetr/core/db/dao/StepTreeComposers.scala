@@ -15,7 +15,7 @@ class StepTreeComposer {
    */
   def reconstitute(bag: Seq[StepTreeDao], stepChildren: Seq[StepChildrenDao]): Seq[StepTree] = {
     def getChildren(id: StepTreeId): Seq[(StepTreeDao, StepChildrenDao)] = {
-      val children = stepChildren.filter(_.id == id).sortBy(_.childOrder)
+      val children = stepChildren.filter(_.parentId == id).sortBy(_.childOrder)
 
       children.flatMap(x => {
         val foundChild = bag.find(_.id == x.childId)
@@ -78,10 +78,10 @@ object StepTreeComposer {
     children.zipWithIndex.map {
       case (child, order) =>
         StepChildrenDao(
-          id = parent,
+          parentId = parent,
           childOrder = order,
           childId = child.id,
-          child.mapper
+          mapper = child.mapper
         )
     }
   }
@@ -96,11 +96,11 @@ object StepTreeComposer {
 class StepTreeDecomposer(stepTree: StepTree) {
   private val flattened = new TreeManager(stepTree).flatten
 
-  val dao: Seq[StepTreeDao] = flattened.map(toDao)
+  val dao: Seq[StepTreeDao] = flattened.map(_.tree).map(toDao)
 
   val children: Seq[StepChildrenDao] = {
     flattened.flatMap(item => {
-      item match {
+      item.tree match {
         case p: Parent =>
           val daos = StepTreeComposer.childrenToDao(p.id, p.children.map(child => StepChildWithMapper(child.id, child.mapper)))
 
@@ -109,7 +109,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
           Nil
       }
     })
-  }
+  }.distinct
 
   // TODO: store mapper/reducer
   private def toDao(stepTree: StepTree): StepTreeDao = {

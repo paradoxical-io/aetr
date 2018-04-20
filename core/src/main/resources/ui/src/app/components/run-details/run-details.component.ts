@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {forkJoin} from "rxjs/observable/forkJoin";
 import {ApiService} from "../../services/api.service";
 import {ActivatedRoute} from "@angular/router";
@@ -10,7 +10,7 @@ import {ITreeOptions} from "angular-tree-component";
     templateUrl: './run-details.component.html',
     styleUrls: ['./run-details.component.css']
 })
-export class RunDetailsComponent implements OnInit, OnDestroy {
+export class RunDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     constructor(private route: ActivatedRoute, private api: ApiService) {
     }
@@ -50,9 +50,7 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
     @ViewChild('tree') tree;
 
     ngAfterViewInit() {
-        if (this.tree) {
-            this.tree.treeModel.expandAll();
-        }
+        this.tree.treeModel.expandAll();
     }
 
     selectNode(event) {
@@ -75,6 +73,10 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
                 return false;
             }
         }
+    }
+
+    expand() {
+        this.tree.treeModel.expandAll();
     }
 
     loadData() {
