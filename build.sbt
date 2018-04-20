@@ -38,6 +38,11 @@ lazy val core = project.settings(commonSettings).settings(
         namespace = Some("paradoxical"),
         tag = Some(Revision.version),
         repository = "aetr"
+      ),
+      ImageName(
+        namespace = Some("paradoxical"),
+        tag = Some("latest"),
+        repository = "aetr"
       )
     ),
 
