@@ -66,7 +66,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
 
       val exec = new UrlExecutorImpl(config)
 
-      val action1 = run.next().head
+      val action1 = run.next().actionable.head
 
       val result1 = new ExecutionHandler(mockdb, exec).execute(Actionable(action1.run, action1.action, action1.previousResult))
 
@@ -77,7 +77,7 @@ class UrlExecutorTests extends FlatSpec with Assertions with MockitoSugar with I
         case _ => fail()
       }
 
-      val action2 = run.next().head
+      val action2 = run.next().actionable.head
 
       val result2 = new ExecutionHandler(mockdb, exec).execute(Actionable(action2.run, action2.action, action2.previousResult))
 

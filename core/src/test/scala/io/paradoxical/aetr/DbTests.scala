@@ -6,7 +6,7 @@ import io.paradoxical.aetr.core.db.dao.{StepChildWithMapper, StepDb, VersionMism
 import io.paradoxical.aetr.core.db.{DbInitializer, StepsDbSync}
 import io.paradoxical.aetr.core.execution.ExecutionHandler
 import io.paradoxical.aetr.core.execution.api.UrlExecutor
-import io.paradoxical.aetr.core.graph.RunManager
+import io.paradoxical.aetr.core.graph.{RunManager, TreeManager}
 import io.paradoxical.aetr.core.model._
 import io.paradoxical.aetr.core.server.modules.ClockModule
 import io.paradoxical.aetr.db.{PostgresDbTestBase, TestModules}
@@ -93,6 +93,42 @@ class DbTests extends PostgresDbTestBase {
 
     // however parents that have ordered childrens should have mappers
     db.getStep(parent.id).waitForResult() shouldEqual parent
+  }
+
+  it should "set and retrieve ordered child mappers on step tree upsertion with repeated nodes in the tree set" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1 = Action(name = NodeName("leaf1"))
+    val leaf2 = Action(name = NodeName("leaf2"))
+
+    val parent = SequentialParent(name = NodeName("parent"))
+
+    db.upsertStep(leaf1).waitForResult()
+    db.upsertStep(leaf2).waitForResult()
+    db.upsertStep(parent).waitForResult()
+
+    db.setChildren(parent.id,
+      List(
+        StepChildWithMapper(leaf1.id, Some(Mappers.Identity())),
+        StepChildWithMapper(leaf1.id, Some(Mappers.Nashorn("foo")))
+      )
+    ).waitForResult()
+
+    val hydratedPraent = db.getStep(parent.id).waitForResult()
+    val run = new TreeManager(hydratedPraent).newRun()
+    db.upsertRun(run).waitForResult()
+
+    val runTree = db.getRunTree(run.rootId).waitForResult()
+
+    // make sure that whether data is accessing via a repr tree
+    // or via a runs.children tree that the semantic information
+    // of child data is preserved
+
+    // make sure related run trees have the proper mappers
+    runTree.repr.asInstanceOf[SequentialParent].children.drop(1).head.mapper shouldEqual Some(Mappers.Nashorn("foo"))
+
+    // make sure run children have the same information
+    runTree.children.drop(1).head.repr.mapper shouldEqual Some(Mappers.Nashorn("foo"))
   }
 
   it should "rebuild children on change" in withDb { injector =>

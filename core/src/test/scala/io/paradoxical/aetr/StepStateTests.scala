@@ -34,7 +34,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     val m = new RunManager(treeRoot)
 
     def advance(action: Action*) = {
-      val nextActions = m.next()
+      val nextActions = m.next().actionable
 
       if (nextActions.isEmpty) {
         assert(m.root.state == RunState.Complete)
@@ -67,7 +67,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     }
 
     def advance(state: RunState, action: Action*) = {
-      val nextActions = m.next()
+      val nextActions = m.next().actionable
 
       if (nextActions.isEmpty) {
         assert(m.root.state == RunState.Complete)
@@ -126,7 +126,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     val m = new RunManager(run)
 
-    val actionableAction1 = m.next().head
+    val actionableAction1 = m.next().actionable.head
 
     assert(actionableAction1.previousResult.contains(seedData))
 
@@ -134,7 +134,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     m.complete(actionableAction1.run, result = action1Result)
 
-    val actionableAction2 = m.next().head
+    val actionableAction2 = m.next().actionable.head
 
     private val action1MappedResult = ResultData("action1_mapped")
 
@@ -147,7 +147,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     m.complete(actionableAction2.run, Some(action2Result))
 
-    val parallelActionItems = m.next()
+    val parallelActionItems = m.next().actionable
 
     assert(parallelActionItems.map(_.previousResult) == List(Some(action2Result), Some(action2Result)))
 
@@ -202,7 +202,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     val m = new RunManager(run)
 
-    val actionableAction1 = m.next().head
+    val actionableAction1 = m.next().actionable.head
 
     val failureData = Some(ResultData("foo"))
 

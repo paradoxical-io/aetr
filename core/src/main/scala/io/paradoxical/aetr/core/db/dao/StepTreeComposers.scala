@@ -67,6 +67,13 @@ class StepTreeComposer {
 case class StepChildWithMapper(id: StepTreeId, mapper: Option[Mapper])
 
 object StepTreeComposer {
+  /**
+   * for each child of a parent create a step child relationship that contains
+   * the child id, the order, and the related mapper/other data
+   * @param parent
+   * @param children
+   * @return
+   */
   def childrenToDao(parent: StepTreeId, children: List[StepChildWithMapper]): Seq[StepChildrenDao] = {
     children.zipWithIndex.map {
       case (child, order) =>
@@ -95,7 +102,9 @@ class StepTreeDecomposer(stepTree: StepTree) {
     flattened.flatMap(item => {
       item match {
         case p: Parent =>
-          StepTreeComposer.childrenToDao(p.id, p.children.map(child => StepChildWithMapper(child.id, child.mapper)))
+          val daos = StepTreeComposer.childrenToDao(p.id, p.children.map(child => StepChildWithMapper(child.id, child.mapper)))
+
+          daos
         case _: Action =>
           Nil
       }

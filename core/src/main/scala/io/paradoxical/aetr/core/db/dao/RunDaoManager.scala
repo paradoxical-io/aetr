@@ -8,24 +8,56 @@ import javax.inject.Inject
 import scala.collection.mutable
 
 class RunDaoManager @Inject()() {
-  def reconstitute(rootId: RootId, runData: Seq[RunDao], tree: StepTree): Run = {
-    val steps: Map[StepTreeId, StepTree] = new TreeManager(tree).flatten.groupBy(_.id).mapValues(_.head)
-
+  /**
+   * Given a hydrated full tree and a set of nodes that represent a run of that tree
+   * try and piece the nodes back together into a full fledged tree
+   *
+   * We start at the run dao that is related to the root, passing around
+   * the parent step tree along with each request.  this is because
+   * for each branch we want to find the Nth child and re-hydrate that
+   *
+   * Which again, keeps all the semantic child relationships intact
+   *
+   * @param rootId
+   * @param runData
+   * @param root
+   * @return
+   */
+  def reconstitute(rootId: RootId, runData: Seq[RunDao], root: StepTree): Run = {
     val cache = new mutable.HashMap[RunInstanceId, Run]()
 
-    def resolve(r: RunDao): Run = {
+    def resolve(r: RunDao, parent: Option[StepTree]): Run = {
       if (cache.contains(r.id)) {
         cache(r.id)
       } else {
+        val repr = {
+          // steps by themselves aren't the fully hydrated
+          // so get them in relation to their parent.
+          // if it has no parent, just get it anyways
+          parent.map(p => {
+            // find our step representation in relation
+            // to where we sit in the _parents_ tree.
+            // this is because there may be many instances of actions or parents
+            // for example, but their mappers and other contetual data
+            // varies by their position in the tree.
+            // find the tree root given the parents order and the parents tree id
+            new TreeManager(p).findAtLevel0(r.order).get
+          }).getOrElse(root)
+        }
+
         val item = Run(
           id = r.id,
-          children = runData.filter(_.parent.exists(_ == r.id)).sortBy(_.order).map(resolve),
+          children = {
+            val runDaoChildren = runData.filter(_.parent.exists(_ == r.id)).sortBy(_.order)
+
+            runDaoChildren.map(child => resolve(child, Some(repr)))
+          },
           rootId = rootId,
           version = r.version,
           state = r.state,
           input = r.input,
           output = r.output,
-          repr = steps(r.stepTreeId),
+          repr = repr,
           createdAt = r.createdAt,
           updatedAt = r.lastUpdatedAt
         )
@@ -36,7 +68,14 @@ class RunDaoManager @Inject()() {
       }
     }
 
-    val runs = runData.map(resolve)
+    // find the root
+    val rootDao = runData.find(r => r.id == r.root).get
+
+    // resolve the set of runs into a tree
+    val rootRun = resolve(rootDao, parent = None)
+
+    // link all the runs together
+    val runs = new RunManager(rootRun).flatten.map(_.run)
 
     runs.foreach(run => {
       val parent = runs.find(_.children.exists(_.id == run.id))

@@ -35,3 +35,11 @@ case class Version(value: Long) extends LongValue {
 }
 
 case class Actionable(run: Run, action: Action, previousResult: Option[ResultData])
+
+case class InputSet(run: RunInstanceId, input: Option[ResultData])
+
+case class Next(parentInputs: Seq[InputSet], actionable: Seq[Actionable]) {
+  def allInputs(): Seq[(RunInstanceId, Option[ResultData])] = {
+    parentInputs.map(p => p.run -> p.input) ++ actionable.map(a => a.run.id -> a.previousResult)
+  }
+}

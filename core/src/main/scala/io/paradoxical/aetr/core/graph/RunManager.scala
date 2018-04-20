@@ -1,11 +1,12 @@
 package io.paradoxical.aetr.core.graph
 
 import io.paradoxical.aetr.core.model._
+import scala.collection.mutable
 
-case class OrderedRun(run: Run, order: Long)
+case class OrderedRun(run: Run, parent: Option[Run], order: Long)
 
 class RunManager(val root: Run) {
-  if(!root.state.isTerminalState) {
+  if (!root.state.isTerminalState) {
     sync(root)
   }
 
@@ -13,22 +14,30 @@ class RunManager(val root: Run) {
     this(new TreeManager(stepTree).newRun())
   }
 
+  /**
+   * Flattens a run into an ordered run. An order for a run is related
+   * ONLY to the siblings that its part of. This flattening is used
+   * to store the sorted order in the database and can be used to reconsitute
+   * the relationship between a parent and its child orderings
+   *
+   * @return
+   */
   def flatten: List[OrderedRun] = {
-    def all0(curr: Run, acc: List[OrderedRun], order: Long = 0): List[OrderedRun] = {
+    def all0(curr: Run, parent: Option[Run], acc: List[OrderedRun], order: Long = 0): List[OrderedRun] = {
       if (curr.children.isEmpty) {
-        OrderedRun(curr, order) :: acc
+        OrderedRun(curr, parent, order) :: acc
       } else {
-        OrderedRun(curr, order) :: curr.children.zipWithIndex.flatMap(c => {
+        OrderedRun(curr, parent, order) :: curr.children.zipWithIndex.flatMap(c => {
           val (child, index) = c
 
-          val children = all0(child, acc, order + index + 1)
+          val children = all0(child, Some(curr), acc, index)
 
           children
         }).toList
       }
     }
 
-    all0(root, Nil)
+    all0(root, parent = None, acc = Nil)
   }
 
   def find(id: RunId): Option[Run] = {
@@ -145,11 +154,25 @@ class RunManager(val root: Run) {
     }
   }
 
-  def next(): Seq[Actionable] = {
-    next(root, root.input)
+  def next(): Next = {
+    dirtyInputNodes.clear()
+
+    val actionables = next(root, root.input)
+
+    Next(dirtyInputNodes.toSeq, actionables)
   }
 
+  /**
+   * Nodes who have their input set on a next query
+   */
+  private val dirtyInputNodes = new mutable.HashSet[InputSet]()
+
   private def next(run: Run, data: Option[ResultData]): Seq[Actionable] = {
+    if (run.input != data) {
+      run.input = data
+
+      dirtyInputNodes.add(InputSet(run.id, data))
+    }
 
     run.repr match {
       case x: Parent =>
