@@ -122,7 +122,7 @@ class StepDb @Inject()(
     provider.withDB(parents.result)
   }
 
-  def setChildrenNoMappers(stepTreeId: StepTreeId, kidsToSet: List[StepTreeId]): Future[Unit] = {
+  def setChildrenNoMappers(stepTreeId: StepTreeId,  kidsToSet: List[StepTreeId]): Future[Unit] = {
     setChildren(stepTreeId, kidsToSet.map(c => StepChildWithMapper(c, mapper = None)))
   }
 

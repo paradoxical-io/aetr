@@ -177,6 +177,22 @@ class DbTests extends PostgresDbTestBase {
     db.getStep(root.id).waitForResult() shouldEqual rootMinusSubTree
   }
 
+  it should "support the same parent in a tree multiple times if the parent has children" in withDb { injector =>
+    val db = injector.instance[StepDb]
+
+    val leaf1: Action = Action(name = NodeName("leaf1"))
+
+    val leaf2 = Action(name = NodeName("leaf2"))
+
+    val branch1 = SequentialParent(name = NodeName("branch1"), children = List(leaf1, leaf2))
+
+    val root = SequentialParent(name = NodeName("root"), children = List(branch1, branch1))
+
+    db.upsertStep(root).waitForResult()
+
+    db.getStep(root.id).waitForResult() shouldEqual root
+  }
+
   it should "upsert and retrieve runs" in withDb { injector =>
     val db = injector.instance[StepDb]
 

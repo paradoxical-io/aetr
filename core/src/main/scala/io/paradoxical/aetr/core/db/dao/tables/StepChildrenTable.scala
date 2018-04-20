@@ -7,9 +7,9 @@ import javax.inject.Inject
 import slick.jdbc.JdbcProfile
 
 case class StepChildrenDao(
-  id: StepTreeId,
-  childOrder: Long,
+  parentId: StepTreeId,
   childId: StepTreeId,
+  childOrder: Int,
   mapper: Option[Mapper]
 )
 
@@ -32,7 +32,7 @@ class StepChildren @Inject()(
   class StepChildTable(tag: Tag) extends DAOTable(tag, "step_children") {
     def id = column[StepTreeId]("id")
 
-    def childOrder = column[Long]("child_order")
+    def childOrder = column[Int]("child_order")
 
     def childId = column[StepTreeId]("child_id")
 
@@ -47,8 +47,8 @@ class StepChildren @Inject()(
     override def * =
       (
         id,
-        childOrder,
         childId,
+        childOrder,
         mapper
       ) <> (StepChildrenDao.tupled, StepChildrenDao.unapply)
   }

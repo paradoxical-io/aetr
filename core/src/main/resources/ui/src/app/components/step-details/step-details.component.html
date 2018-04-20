@@ -5,6 +5,9 @@
                 <li class="nav-item active p-2">
                     <h4>Actions</h4>
                 </li>
+                <li class="nav-item p-2">
+                    <span class="link" (click)="expand()">Expand Tree</span>
+                </li>
                 <li class="nav-item  p-2">
                     <span class="link" [routerLink]="['/runs/new/steps', step.id]">New Run</span>
                 </li>
