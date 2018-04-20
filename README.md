@@ -3,10 +3,17 @@ Aetr
 
 [![Build Status](https://travis-ci.org/paradoxical-io/aetr.svg?branch=master)](https://travis-ci.org/paradoxical-io/aetr)
 
-AETR
----
 
 AETR is an *A*PI *E*xecution *T*ask *R*unner.  Basically its there to manage a workflow of calling API's in a particular step for you.
+
+Get at it on [dockerhub](https://hub.docker.com/r/paradoxical/aetr)
+
+```
+docker pull paradoxical/aetr
+```
+
+What is AETR?
+---
 
 Lots of workflows are already separated by logical API's and the coordination of calling this, then that, is easy in a scenario where a single workflow is being consumed.
 
@@ -68,7 +75,7 @@ The data model is represented by two concepts
 
 ### StepTree
 
-A step tree is a template of what to do. It is the workflow.  Tredbstdbtes are composed of 3 options, either a parent node which has children to be run in 
+A step tree is a template of what to do. It is the workflow.  Step trees are composed of 3 options, either a parent node which has children to be run in 
 either sequential or parallel mode, or a child node which is an action.
 
 Currently supported actions are executing POST requests on an API URL.  
@@ -77,8 +84,7 @@ URL's POSTed to should response back to the completion API with the passed in Ru
 
 ### Run
 
-A run is an instance of a step tree. It is a distinct workflow.  Run's store the result of each node and parent nodes determine their results 
-from children.
+A run is an instance of a step tree. It is a distinct workflow.  Run's store the result of each node and parent nodes determine their results from children.
 
 ### POST Format
 
