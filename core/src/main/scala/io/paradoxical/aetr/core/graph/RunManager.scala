@@ -1,32 +1,43 @@
 package io.paradoxical.aetr.core.graph
 
 import io.paradoxical.aetr.core.model._
+import scala.collection.mutable
 
-case class OrderedRun(run: Run, order: Long)
+case class OrderedRun(run: Run, parent: Option[Run], order: Long)
 
 class RunManager(val root: Run) {
-  sync(root)
+  if (!root.state.isTerminalState) {
+    sync(root)
+  }
 
   def this(stepTree: StepTree) {
     this(new TreeManager(stepTree).newRun())
   }
 
+  /**
+   * Flattens a run into an ordered run. An order for a run is related
+   * ONLY to the siblings that its part of. This flattening is used
+   * to store the sorted order in the database and can be used to reconsitute
+   * the relationship between a parent and its child orderings
+   *
+   * @return
+   */
   def flatten: List[OrderedRun] = {
-    def all0(curr: Run, acc: List[OrderedRun], order: Long = 0): List[OrderedRun] = {
+    def all0(curr: Run, parent: Option[Run], acc: List[OrderedRun], order: Long = 0): List[OrderedRun] = {
       if (curr.children.isEmpty) {
-        OrderedRun(curr, order) :: acc
+        OrderedRun(curr, parent, order) :: acc
       } else {
-        OrderedRun(curr, order) :: curr.children.zipWithIndex.flatMap(c => {
+        OrderedRun(curr, parent, order) :: curr.children.zipWithIndex.flatMap(c => {
           val (child, index) = c
 
-          val children = all0(child, acc, order + index + 1)
+          val children = all0(child, Some(curr), acc, index)
 
           children
         }).toList
       }
     }
 
-    all0(root, Nil)
+    all0(root, parent = None, acc = Nil)
   }
 
   def find(id: RunId): Option[Run] = {
@@ -99,30 +110,43 @@ class RunManager(val root: Run) {
     }
   }
 
-  def getFinalResult: Option[ResultData] = getResult(root)
+  def getFinalResult: Option[ResultData] = {
+    root.output
+  }
 
   def getResult(run: Run): Option[ResultData] = {
     if (run.children.isEmpty) {
       run.output
     } else {
-      if (determineState(run).isCompleteState) {
+      if (determineState(run).isTerminalState) {
         run.repr match {
           case _: SequentialParent =>
             // the last completed child
             // either they are all complete and so the last item is the value we want
             // or one errored out and we want to grab its state
-            run.children.filter(_.state.isCompleteState).lastOption.flatMap(_.output)
+            run.children.filter(_.state.isTerminalState).lastOption.flatMap(lastchild => {
+              // if we're complete perform a map
+              if (lastchild.state == RunState.Complete) {
+                lastchild.output.map(out => {
+                  lastchild.repr.mapper.getOrElse(Mappers.Identity()).map(out)
+                })
+              } else {
+                // otherwise return the raw output
+                lastchild.output
+              }
+            })
+
           case p: ParallelParent =>
-            // reduce all parallel errors
+            // reduce all parallel errors to be concated together
             if (run.children.exists(_.state == RunState.Error)) {
               Some(run.children.filter(_.state == RunState.Error).flatMap(_.output).mkString(";")).map(ResultData)
             } else {
               val results = run.children.flatMap(_.output)
 
-              p.reducer.reduce(results).map(p.mapper.map)
+              p.reducer.reduce(results)
             }
 
-          case action: Action => run.output.map(action.mapper.map)
+          case action: Action => run.output.map(action.mapper.getOrElse(Mappers.Identity()).map)
         }
       } else {
         None
@@ -130,11 +154,26 @@ class RunManager(val root: Run) {
     }
   }
 
-  def next(): Seq[Actionable] = {
-    next(root, root.input)
+  def next(): Next = {
+    dirtyInputNodes.clear()
+
+    val actionables = next(root, root.input)
+
+    Next(dirtyInputNodes.toSeq, actionables)
   }
 
+  /**
+   * Nodes who have their input set on a next query
+   */
+  private val dirtyInputNodes = new mutable.HashSet[InputSet]()
+
   private def next(run: Run, data: Option[ResultData]): Seq[Actionable] = {
+    if (run.input != data) {
+      run.input = data
+
+      dirtyInputNodes.add(InputSet(run.id, data))
+    }
+
     run.repr match {
       case x: Parent =>
         x match {
@@ -149,7 +188,9 @@ class RunManager(val root: Run) {
                 // NOTE that mappers are not applied to root seed data
                 run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
                   run.repr match {
-                    case canMap: MapsResult => run.output.map(canMap.mapper.map)
+                    case canMap: MapsResult => {
+                      run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
+                    }
                     case _ => run.output
                   }
                 })

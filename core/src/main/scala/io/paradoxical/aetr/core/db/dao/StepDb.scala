@@ -122,7 +122,17 @@ class StepDb @Inject()(
     provider.withDB(parents.result)
   }
 
-  def setChildren(stepTreeId: StepTreeId, kidsToSet: List[StepTreeId]): Future[Unit] = {
+  def setChildrenNoMappers(stepTreeId: StepTreeId, kidsToSet: List[StepTreeId]): Future[Unit] = {
+    setChildren(stepTreeId, kidsToSet.map(c => StepChildWithMapper(c, mapper = None)))
+  }
+
+  def setRunInput(id: RunInstanceId, previousResult: Option[ResultData]) = {
+    provider.withDB {
+      runs.updateWhere(_.id === id, _.input, previousResult)
+    }
+  }
+
+  def setChildren(stepTreeId: StepTreeId, kidsToSet: List[StepChildWithMapper]): Future[Unit] = {
     val deleteExistingChildren = children.query.filter(_.id === stepTreeId).delete
 
     val daos = StepTreeComposer.childrenToDao(stepTreeId, kidsToSet)
@@ -155,8 +165,8 @@ class StepDb @Inject()(
     }
   }
 
-  def upsertRun(run: Run, input: Option[ResultData] = None): Future[RunInstanceId] = {
-    val daos = runDaoManager.runToDao(run.copy(input = input))
+  def upsertRun(run: Run, input: Option[Option[ResultData]] = None): Future[RunInstanceId] = {
+    val daos = runDaoManager.runToDao(input.map(toSet => run.copy(input = toSet)).getOrElse(run))
 
     val updateDao = DBIO.sequence(daos.map(upsertIfVersion))
 

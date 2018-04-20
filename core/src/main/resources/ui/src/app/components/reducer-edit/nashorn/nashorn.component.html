@@ -1,0 +1,13 @@
+<div class="container">
+  Reducer function:
+  <textarea class="form-control"
+            id="reducer"
+            [(ngModel)]="js"
+            name="reducer"
+            rows="10"
+            (keyup)="setData()"></textarea>
+
+  <div class="bg-warning">
+    {{errorText}}
+  </div>
+</div>

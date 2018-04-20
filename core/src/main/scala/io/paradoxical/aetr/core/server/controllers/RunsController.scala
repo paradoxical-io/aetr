@@ -22,11 +22,11 @@ class RunsController @Inject()(
 )(implicit executionContext: ExecutionContext) extends Framework.RestApi {
   postWithDoc("/api/v1/runs/step/:id") {
     _.description("Start a new run from a step").request[CreateRunRequest].responseWith[CreateRunResult](status = 200)
-  } { r: CreateRunRequest =>
-    db.getStep(r.id).
+  } { req: CreateRunRequest =>
+    db.getStep(req.id).
       map(stepTree => new RunManager(stepTree).root).
       flatMap(r => {
-        db.upsertRun(r, r.input).map(instanceId => {
+        db.upsertRun(r, Some(req.input)).map(instanceId => {
           advanceQueuer.enqueue(r.rootId)
 
           instanceId

@@ -11,10 +11,9 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   trait ActionList {
     val rootId = StepTreeId.next
 
-    val action1: Action = Action(id = StepTreeId.next, NodeName("action1"), mapper = Mappers.Function(res => ResultData(res.value + "_mapped")))
+    val action1: Action = Action(id = StepTreeId.next, NodeName("action1"), mapper = Some(Mappers.Function(res => ResultData(res.value + "_mapped"))))
     val action2 = Action(id = StepTreeId.next, NodeName("action2"))
     val action3 = Action(id = StepTreeId.next, NodeName("action3"))
-
     val action4 = Action(id = StepTreeId.next, NodeName("action4"))
 
     val parallelParent = ParallelParent(
@@ -35,7 +34,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     val m = new RunManager(treeRoot)
 
     def advance(action: Action*) = {
-      val nextActions = m.next()
+      val nextActions = m.next().actionable
 
       if (nextActions.isEmpty) {
         assert(m.root.state == RunState.Complete)
@@ -68,7 +67,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
     }
 
     def advance(state: RunState, action: Action*) = {
-      val nextActions = m.next()
+      val nextActions = m.next().actionable
 
       if (nextActions.isEmpty) {
         assert(m.root.state == RunState.Complete)
@@ -121,29 +120,81 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "pass the result of the previous into the current" in new ActionList {
-    val run = new TreeManager(treeRoot).newRun(input = Some(ResultData("seed")))
+    private val seedData = ResultData("seed")
+
+    val run = new TreeManager(treeRoot).newRun(input = Some(seedData))
 
     val m = new RunManager(run)
 
-    val actionableAction1 = m.next().head
+    val actionableAction1 = m.next().actionable.head
 
-    assert(actionableAction1.previousResult.contains(ResultData("seed")))
+    assert(actionableAction1.previousResult.contains(seedData))
 
-    m.complete(actionableAction1.run, result = Some(ResultData("action1")))
+    val action1Result = Some(ResultData("action1"))
 
-    val actionableAction2 = m.next().head
+    m.complete(actionableAction1.run, result = action1Result)
 
-    assert(actionableAction2.previousResult.contains(ResultData("action1_mapped")))
+    val actionableAction2 = m.next().actionable.head
 
-    m.complete(actionableAction2.run, Some(ResultData("action2")))
+    private val action1MappedResult = ResultData("action1_mapped")
 
-    val parallelActionItems = m.next()
+    // make sure the tracked input is set properly on the related run
+    assert(m.find(actionableAction2.run.id).get.input.contains(action1MappedResult))
 
-    assert(parallelActionItems.map(_.previousResult) == List(Some(ResultData("action2")), Some(ResultData("action2"))))
+    assert(actionableAction2.previousResult.contains(action1MappedResult))
+
+    private val action2Result = ResultData("action2")
+
+    m.complete(actionableAction2.run, Some(action2Result))
+
+    val parallelActionItems = m.next().actionable
+
+    assert(parallelActionItems.map(_.previousResult) == List(Some(action2Result), Some(action2Result)))
 
     parallelActionItems.zipWithIndex.foreach { case (a, i) => m.complete(a.run, Some(ResultData(s"p$i"))) }
 
     m.getFinalResult shouldEqual Option(ResultData("p0;p1"))
+
+    assert(m.root.input.contains(seedData))
+
+    val runNodesByStepLookup = m.flatten.map(x => x.run.repr.id -> x).toMap
+
+    val inputByRun = m.flatten.flatMap(_.run.input)
+
+    assert(inputByRun == List(
+      seedData, // root
+      seedData, //sequential parent 1
+      seedData, // action1
+      action1MappedResult, // action2
+      action2Result, //parallel parent
+      action2Result, // action3
+      action2Result // action4
+    ))
+
+    // the first sequential node should have its input the same as the root
+    assert(runNodesByStepLookup(sequentialParent.id).run.input.contains(seedData))
+
+    // the second sequential node should have its input hte result of the first chain
+    // which is the result of the second action
+    assert(runNodesByStepLookup(parallelParent.id).run.input.contains(action2Result))
+  }
+
+  it should "not re-sync a run if it is in a terminal state" in new ActionList {
+    val run = new TreeManager(treeRoot).newRun(input = Some(ResultData("seed")))
+
+    val m1 = new RunManager(run)
+
+    m1.completeAll(Some(ResultData("complete")))
+
+    // simulate the underlying repr changing from the db
+    val updatedRepr = run.repr.withMapper(Some(Mappers.Function(_ => ResultData("mapped"))))
+
+    val m2 = new RunManager(run.copy(repr = updatedRepr))
+
+    // because the root was already in a terminal state
+    // we should not apply the new mapper
+    // given it should already have an output value
+    m2.getFinalResult shouldEqual m1.getFinalResult
   }
 
   it should "propagate errors to the root" in new ActionList {
@@ -151,7 +202,7 @@ class StepStateTests extends FlatSpec with Matchers with MockitoSugar {
 
     val m = new RunManager(run)
 
-    val actionableAction1 = m.next().head
+    val actionableAction1 = m.next().actionable.head
 
     val failureData = Some(ResultData("foo"))
 

@@ -3,5 +3,5 @@ function snapshot() {
 }
 
 function release() {
-  sbt -Drevision=$REVISION publishSigned sonatypeRelease dockerPush
+  sbt -Dversion=$REVISION publishSigned sonatypeRelease
 }

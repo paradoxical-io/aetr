@@ -13,7 +13,8 @@ object DtoConvertors {
         id = fatDto.id,
         name = fatDto.name,
         action = fatDto.action,
-        children = fatDto.children.map(_.map(_.id)),
+        reducer = fatDto.reducer,
+        children = fatDto.children.map(_.map(child => StepSlimChild(child.id, child.mapper))),
         stepType = fatDto.stepType
       )
     }
@@ -48,18 +49,18 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
   }
 
   def fromStep(stepTree: StepTree): StepsFatDto = {
-    val (action, children, typ) =
+    val (action, reducer, children, typ) =
       stepTree match {
         case p: Parent =>
-          val typ = p match {
+          val (typ, reducer) = p match {
             case _: SequentialParent =>
-              StepType.Sequential
-            case _: ParallelParent =>
-              StepType.Parallel
+              (StepType.Sequential, None)
+            case p: ParallelParent =>
+              (StepType.Parallel, Some(p.reducer))
           }
-          (None, Some(p.children.map(fromStep)), typ)
+          (None, reducer, Some(p.children.map(fromStep)), typ)
         case a: Action =>
-          (Some(a.execution), None, StepType.Action)
+          (Some(a.execution), None, None, StepType.Action)
       }
 
     StepsFatDto(
@@ -67,7 +68,9 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
       name = stepTree.name,
       action = action,
       children = children,
-      stepType = typ
+      stepType = typ,
+      reducer = reducer,
+      mapper = stepTree.mapper
     )
   }
 
@@ -77,6 +80,7 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
         Action(
           id = step.id,
           name = step.name,
+          mapper = step.mapper,
           execution = execution
         )
       case None =>
@@ -85,12 +89,15 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
             SequentialParent(
               id = step.id,
               name = step.name,
-              children = step.children.getOrElse(Nil).map(toStep)
+              children = step.children.getOrElse(Nil).map(toStep),
+              mapper = step.mapper
             )
           case StepType.Parallel =>
             ParallelParent(
               id = step.id,
               name = step.name,
+              mapper = step.mapper,
+              reducer = step.reducer.getOrElse(Reducers.NoOp()),
               children = step.children.getOrElse(Nil).map(toStep)
             )
           case _ => ???
@@ -107,19 +114,32 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
           execution = execution
         ))
       case None =>
-        stepDb.getSteps(stepDto.children.getOrElse(Nil)).map(children => {
+        val dtoChildLookup = stepDto.children.getOrElse(Nil).map(c => c.id -> c).toMap
+        stepDb.getSteps(dtoChildLookup.keys.toList).map(children => {
+
+          // hydrate the children from the database but then
+          // populate the mapper we want from the input DTO
+          val childrenWithMappers = children.map(child => {
+            if (dtoChildLookup.contains(child.id)) {
+              child.withMapper(dtoChildLookup(child.id).mapper)
+            } else {
+              child
+            }
+          })
+
           stepDto.stepType match {
             case StepType.Sequential =>
               SequentialParent(
                 id = stepDto.id,
                 name = stepDto.name,
-                children = children
+                children = childrenWithMappers
               )
             case StepType.Parallel =>
               ParallelParent(
                 id = stepDto.id,
                 name = stepDto.name,
-                children = children
+                children = children,
+                reducer = stepDto.reducer.getOrElse(Reducers.NoOp())
               )
             case StepType.Action => ???
           }

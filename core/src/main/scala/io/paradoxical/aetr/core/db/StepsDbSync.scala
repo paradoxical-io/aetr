@@ -9,6 +9,10 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 class StepsDbSync @Inject()(stepDb: StepDb)(implicit executionContext: ExecutionContext) {
+  def setRunInput(id: RunInstanceId, previousResult: Option[ResultData]): Unit = {
+    stepDb.setRunInput(id, previousResult).waitForResult()
+  }
+
   def upsertSteps(stepTree: StepTree): Unit = {
     stepDb.upsertStep(stepTree).waitForResult()
   }

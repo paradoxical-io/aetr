@@ -22,6 +22,9 @@ import {EditStepParentComponent} from './components/steps/edit/parent/parent.com
 import {DndModule} from "ng2-dnd";
 import {RunDetailsComponent} from './components/run-details/run-details.component';
 import {EditStepActionComponent} from "./components/steps/edit/action/action.component";
+import { MapperEditComponent } from './components/mapper-edit/mapper-edit.component';
+import { ReducerEditComponent } from './components/reducer-edit/reducer-edit.component';
+import { NashornComponent } from './components/reducer-edit/nashorn/nashorn.component';
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
@@ -54,7 +57,10 @@ const appRoutes: Routes = [
         HeaderComponent,
         EditStepParentComponent,
         EditStepActionComponent,
-        RunDetailsComponent
+        RunDetailsComponent,
+        MapperEditComponent,
+        ReducerEditComponent,
+        NashornComponent
     ],
     imports: [
         RouterModule.forRoot(appRoutes),

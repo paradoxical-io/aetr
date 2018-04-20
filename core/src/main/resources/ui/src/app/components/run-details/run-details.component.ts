@@ -78,17 +78,19 @@ export class RunDetailsComponent implements OnInit, OnDestroy {
     }
 
     loadData() {
+        let parent = this;
+
         this.route.paramMap.subscribe(x => {
             let rootId = x.get('id');
 
             function update() {
-                let run = this.api.getRun(rootId);
+                let run = parent.api.getRun(rootId);
 
                 forkJoin([run]).subscribe(results => {
-                    this.run = results[0];
+                    parent.run = results[0];
 
-                    if (this.isComplete(run.state)) {
-                        this.unwatchTasks();
+                    if (parent.isComplete(parent.run.state)) {
+                        parent.unwatchTasks();
                     }
                 })
             }

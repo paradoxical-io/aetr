@@ -20,6 +20,10 @@
                     </select>
                 </div>
 
+                <div class="form-group" *ngIf="step.stepType == StepType.Parallel">
+                    <app-reducer-edit [step]="step"></app-reducer-edit>
+                </div>
+
                 <div class="form-group" dnd-sortable-container [sortableData]="step.children" [dropZones]="['child-dropZone']">
                     <div *ngIf="step.children.length == 0">
                         Drag children here...
@@ -31,6 +35,10 @@
                             [dragData]="child"
                             [dragEnabled]="true">
                             {{child.name}}
+
+                            <div *ngIf="step.stepType == StepType.Sequential">
+                                <app-mapper-edit [step]="child"></app-mapper-edit>
+                            </div>
                         </li>
                     </ul>
                 </div>

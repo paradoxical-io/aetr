@@ -54,7 +54,12 @@ export class ApiService {
     updateStep(step: Step): Observable<void> {
         let kids = [];
         if(step.children) {
-            kids = step.children.map(c => c.id)
+            kids = step.children.map(c => {
+                return {
+                    id: c.id,
+                    mapper: c.mapper
+                }
+            })
         }
 
         return this.http.put<Step>(`api/v1/steps/slim`, {
@@ -62,6 +67,7 @@ export class ApiService {
             name: step.name,
             stepType: step.stepType,
             action: step.action,
+            reducer: step.reducer,
             children: kids
         }).map(x => null)
     }

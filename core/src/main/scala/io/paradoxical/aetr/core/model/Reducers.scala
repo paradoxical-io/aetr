@@ -2,14 +2,12 @@ package io.paradoxical.aetr.core.model
 
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonSubTypes, JsonTypeInfo}
-import javax.script.{ScriptContext, ScriptEngineManager, SimpleScriptContext}
-import jdk.nashorn.api.scripting.JSObject
-import scala.collection.JavaConverters._
+import javax.script.{ScriptContext, SimpleScriptContext}
+import jdk.nashorn.api.scripting.{ClassFilter, JSObject}
 
 @JsonTypeInfo(
   use = JsonTypeInfo.Id.NAME,
   include = JsonTypeInfo.As.PROPERTY,
-  defaultImpl = classOf[NoOp],
   property = "type")
 @JsonSubTypes(value = Array(
   new Type(value = classOf[Reducers.NoOp], name = "no-op"),
@@ -33,13 +31,16 @@ object Reducers {
     override def reduce(ins: Seq[ResultData]): Option[ResultData] = f(ins)
   }
 
-  object Nashorn {
-    protected val engine = new ScriptEngineManager().getEngineByName("nashorn")
+
+
+  class NoJavaFilter extends ClassFilter {
+    def exposeToScripts(s: String) = false
   }
 
   case class Nashorn(js: String) extends Reducer {
 
-    import Nashorn._
+    import io.paradoxical.aetr.core.model.nashorn.NashornEngine._
+    import jdk.nashorn.api.scripting.ScriptObjectMirror
 
     override def reduce(ins: Seq[ResultData]): Option[ResultData] = {
       val context = new SimpleScriptContext
@@ -50,7 +51,11 @@ object Reducers {
 
       val function = context.getAttribute("apply", ScriptContext.ENGINE_SCOPE).asInstanceOf[JSObject]
 
-      val result = function.call(null, ins.map(_.value).asJavaCollection.toArray()).asInstanceOf[String]
+      val nativeJsInitializer = s"var arr = [${ins.map(x => s""""${x.value}"""").mkString(",")}]; arr"
+
+      val jsArray = engine.eval(nativeJsInitializer).asInstanceOf[ScriptObjectMirror]
+
+      val result = function.call(null, jsArray).asInstanceOf[String]
 
       Option(result).map(ResultData)
     }

@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../../../services/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
-import {Step, StepType} from "../../../../model/model";
+import {NashornMapper, Step, StepType} from "../../../../model/model";
 import {forkJoin} from "rxjs/observable/forkJoin";
 
 @Component({
@@ -38,6 +38,7 @@ export class EditStepParentComponent implements OnInit {
 
             forkJoin([getStep, getAllSteps]).subscribe(s => {
                 this.step = s[0];
+
                 this.allSteps = s[1];
 
                 this.sortSteps();

@@ -1,7 +1,7 @@
 package io.paradoxical.aetr.core.db.dao.tables
 
 import io.paradoxical.aetr.core.db.dao.DataMappers
-import io.paradoxical.aetr.core.model.StepTreeId
+import io.paradoxical.aetr.core.model.{Mapper, StepTreeId}
 import io.paradoxical.rdb.slick.dao.SlickDAO
 import javax.inject.Inject
 import slick.jdbc.JdbcProfile
@@ -9,7 +9,8 @@ import slick.jdbc.JdbcProfile
 case class StepChildrenDao(
   id: StepTreeId,
   childOrder: Long,
-  childId: StepTreeId
+  childId: StepTreeId,
+  mapper: Option[Mapper]
 )
 
 object StepChildren {
@@ -35,16 +36,20 @@ class StepChildren @Inject()(
 
     def childId = column[StepTreeId]("child_id")
 
+    def mapper = column[Option[Mapper]]("mapper")
+
     def pk = primaryKey("pk_id_order_child", (id, childOrder, childId))
 
     def idFk = foreignKey("step_children_id_steps_id_fk", id, steps.query)(_.id)
+
     def childIdFk = foreignKey("step_children_child_id_steps_id_fk", childId, steps.query)(_.id)
 
     override def * =
       (
         id,
         childOrder,
-        childId
+        childId,
+        mapper
       ) <> (StepChildrenDao.tupled, StepChildrenDao.unapply)
   }
 

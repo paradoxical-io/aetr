@@ -14,16 +14,28 @@ class StepTreeComposer {
    * @return
    */
   def reconstitute(bag: Seq[StepTreeDao], stepChildren: Seq[StepChildrenDao]): Seq[StepTree] = {
-    def getChildren(id: StepTreeId): Seq[StepTreeDao] = {
-      val children = stepChildren.filter(_.id == id).sortBy(_.childOrder).map(_.childId)
+    def getChildren(id: StepTreeId): Seq[(StepTreeDao, StepChildrenDao)] = {
+      val children = stepChildren.filter(_.id == id).sortBy(_.childOrder)
 
-      children.flatMap(x => bag.find(_.id == x))
+      children.flatMap(x => {
+        val foundChild = bag.find(_.id == x.childId)
+
+        foundChild.map(c => (c, x))
+      })
     }
 
     def resolve(stepTreeDao: StepTreeDao): StepTree = {
-      val childrenDaos = getChildren(stepTreeDao.id)
+      val childList = getChildren(stepTreeDao.id)
 
-      lazy val childrenSteps = childrenDaos.map(resolve).toList
+      val childLookup = childList.map(x => (x._1.id, x._2.childOrder) -> x).toMap
+
+      lazy val childrenSteps = childList.map(c => resolve(c._1)).zipWithIndex.map {
+        case (child, index) =>
+          // reset the mapper given the childs order from the db
+          val mapper = childLookup((child.id, index))._2.mapper
+
+          child.withMapper(mapper)
+      }.toList
 
       stepTreeDao.stepType match {
         case StepType.Sequential =>
@@ -36,6 +48,7 @@ class StepTreeComposer {
           ParallelParent(
             id = stepTreeDao.id,
             name = stepTreeDao.name,
+            reducer = stepTreeDao.reducer.getOrElse(Reducers.NoOp()),
             children = childrenSteps
           )
         case StepType.Action =>
@@ -51,14 +64,24 @@ class StepTreeComposer {
   }
 }
 
+case class StepChildWithMapper(id: StepTreeId, mapper: Option[Mapper])
+
 object StepTreeComposer {
-  def childrenToDao(parent: StepTreeId, children: List[StepTreeId]): Seq[StepChildrenDao] = {
+  /**
+   * for each child of a parent create a step child relationship that contains
+   * the child id, the order, and the related mapper/other data
+   * @param parent
+   * @param children
+   * @return
+   */
+  def childrenToDao(parent: StepTreeId, children: List[StepChildWithMapper]): Seq[StepChildrenDao] = {
     children.zipWithIndex.map {
       case (child, order) =>
         StepChildrenDao(
           id = parent,
           childOrder = order,
-          childId = child
+          childId = child.id,
+          child.mapper
         )
     }
   }
@@ -79,7 +102,9 @@ class StepTreeDecomposer(stepTree: StepTree) {
     flattened.flatMap(item => {
       item match {
         case p: Parent =>
-          StepTreeComposer.childrenToDao(p.id, p.children.map(_.id))
+          val daos = StepTreeComposer.childrenToDao(p.id, p.children.map(child => StepChildWithMapper(child.id, child.mapper)))
+
+          daos
         case _: Action =>
           Nil
       }
@@ -96,6 +121,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Sequential,
+              reducer = None,
               execution = None
             )
           case p: ParallelParent =>
@@ -103,6 +129,7 @@ class StepTreeDecomposer(stepTree: StepTree) {
               id = p.id,
               name = p.name,
               stepType = StepType.Parallel,
+              reducer = Some(p.reducer),
               execution = None
             )
         }
@@ -111,7 +138,8 @@ class StepTreeDecomposer(stepTree: StepTree) {
           id = p.id,
           name = p.name,
           stepType = StepType.Action,
-          execution = Some(p.execution)
+          execution = Some(p.execution),
+          reducer = None
         )
     }
   }

@@ -1,0 +1,13 @@
+<div class="container">
+    Mapping function:
+    <textarea class="form-control"
+              id="mapper"
+              [(ngModel)]="js"
+              name="mapper"
+              rows="5"
+              (keyup)="setData()"></textarea>
+
+    <div class="bg-warning">
+        {{errorText}}
+    </div>
+</div>
