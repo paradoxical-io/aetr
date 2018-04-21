@@ -15,12 +15,19 @@
         </nav>
 
         <main class="col-sm-9">
-            <ul *ngFor="let step of steps | orderBy : 'name'" class="list-group list-group-flush">
+            <input type="text"
+                   class="form-control"
+                   [(ngModel)]="searchText"
+                   (keyup)="filterAllSteps(searchText)"
+                   placeholder="Filter"
+            />
+
+            <ul *ngFor="let step of filteredSteps | orderBy : 'name'" class="list-group list-group-flush">
                 <li class="list-group-item">
                     <input type="checkbox"
                            (click)="selectToggle(step.id)"
                            [checked]="selectedId == step.id">
-                    <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span>
+                    <span class="link" [routerLink]="['/steps/details/', step.id]">{{step.name}}</span> - {{step.stepType}}
                 </li>
             </ul>
 

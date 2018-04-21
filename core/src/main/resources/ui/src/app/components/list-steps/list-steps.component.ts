@@ -14,18 +14,33 @@ export class ListStepsComponent implements OnInit {
 
     steps: Step[];
 
+    filteredSteps: Step[];
+
     selectedId: string;
 
     errorText: string = "";
 
+    searchText: string = "";
+
     selectedRelatedParents: StepRoot[] = [];
+
+    filterAllSteps() {
+        this.applyFilter()
+    }
+
+    private applyFilter() {
+        this.filteredSteps = this.steps.filter(x => x.name.toLowerCase().indexOf(this.searchText.toLowerCase()) != -1)
+    }
 
     ngOnInit() {
         this.loadData()
     }
 
     private loadData(): void {
-        this.api.listSteps().subscribe(s => this.steps = s)
+        this.api.listSteps().subscribe(s => {
+            this.steps = s;
+            this.filteredSteps = s.slice()
+        })
     }
 
     selectToggle(id: string) {
