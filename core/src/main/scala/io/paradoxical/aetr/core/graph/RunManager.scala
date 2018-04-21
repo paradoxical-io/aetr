@@ -159,6 +159,8 @@ class RunManager(val root: Run) {
 
     val actionables = next(root, root.input)
 
+    // return the actions to take + the nodes who had their
+    // input set as recursing through the tree
     Next(dirtyInputNodes.toSeq, actionables)
   }
 
@@ -171,6 +173,8 @@ class RunManager(val root: Run) {
     if (run.input != data) {
       run.input = data
 
+      // nodes who haven't had their input field set should set
+      // it as we recurse through and then we track it
       dirtyInputNodes.add(InputSet(run.id, data))
     }
 
@@ -178,23 +182,7 @@ class RunManager(val root: Run) {
       case x: Parent =>
         x match {
           case _: SequentialParent =>
-            val previousResult =
-              if (run.children.forall(_.state == RunState.Pending)) {
-                // nobody has completed so if a special seed was sent, use that
-                data
-              } else {
-                // find the last one who completed and take their result
-                // A matched child that maps its result applies its data mapper here.
-                // NOTE that mappers are not applied to root seed data
-                run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
-                  run.repr match {
-                    case canMap: MapsResult => {
-                      run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
-                    }
-                    case _ => run.output
-                  }
-                })
-              }
+            val previousResult = determinePreviousResult(run, data)
 
             run.children.find(_.state == RunState.Pending).map(next(_, previousResult)).getOrElse(Nil)
           case _: ParallelParent =>
@@ -203,6 +191,32 @@ class RunManager(val root: Run) {
         }
       case x: Action if run.state == RunState.Pending =>
         List(Actionable(run, x, data))
+    }
+  }
+
+  /**
+   * The previous result of a run with its mapping applied
+   *
+   * @param run
+   * @param seed
+   * @return
+   */
+  private def determinePreviousResult(run: Run, seed: Option[ResultData]): Option[ResultData] = {
+    if (run.children.forall(_.state == RunState.Pending)) {
+      // nobody has completed so if a special seed was sent, use that
+      seed
+    } else {
+      // find the last one who completed and take their result
+      // A matched child that maps its result applies its data mapper here.
+      // NOTE that mappers are not applied to root seed data
+      run.children.filter(_.state == RunState.Complete).lastOption.flatMap(run => {
+        run.repr match {
+          case canMap: MapsResult => {
+            run.output.map(canMap.mapper.getOrElse(Mappers.Identity()).map)
+          }
+          case _ => run.output
+        }
+      })
     }
   }
 }

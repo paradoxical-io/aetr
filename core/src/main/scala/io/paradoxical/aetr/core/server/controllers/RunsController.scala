@@ -129,7 +129,11 @@ case class RunTreeDto(
   root: RootId,
   state: RunState,
   result: Option[ResultData],
+  input: Option[ResultData],
   stepTree: StepsRootDto,
+  createdAt: Long,
+  executedAt: Option[Long],
+  completedAt: Option[Long],
   children: Seq[RunTreeDto]
 )
 

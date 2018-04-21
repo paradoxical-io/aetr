@@ -59,7 +59,9 @@ class RunDaoManager @Inject()() {
           output = r.output,
           repr = repr,
           createdAt = r.createdAt,
-          updatedAt = r.lastUpdatedAt
+          updatedAt = r.lastUpdatedAt,
+          executedAt = r.executedAt,
+          completedAt = r.completedAt
         )
 
         cache.put(item.id, item)
@@ -105,6 +107,8 @@ class RunDaoManager @Inject()() {
         order = r.order,
         output = r.run.output,
         createdAt = r.run.createdAt,
+        executedAt = if (r.run.executedAt.isEmpty && r.run.state == RunState.Executing) Some(Instant.now()) else r.run.executedAt,
+        completedAt = if (r.run.completedAt.isEmpty && r.run.state.isTerminalState) Some(Instant.now()) else r.run.completedAt,
         lastUpdatedAt = now
       )
     })

@@ -94,6 +94,8 @@ export class RunData {
     id: string;
     result: string;
     createdAt: number;
+    executedAt: number;
+    completedAt: number;
     stepTreeId: string;
 }
 
@@ -116,6 +118,10 @@ export class RunTree {
     root: string;
     state: RunState;
     result: string;
+    input: string;
     stepTree: StepRoot;
+    createdAt: number;
+    executedAt: number;
+    completedAt: number;
     children: RunTree[];
 }

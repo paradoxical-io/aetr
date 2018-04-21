@@ -28,12 +28,16 @@ class DtoConvertors @Inject()(stepDb: StepDb)(implicit executionContext: Executi
       root = run.rootId,
       state = run.state,
       result = run.output,
+      input = run.input,
       stepTree = StepsRootDto(
         id = run.repr.id,
         name = run.repr.name,
         stepType = stepType(run.repr)
       ),
-      children = run.children.map(toRunResult)
+      children = run.children.map(toRunResult),
+      createdAt = run.createdAt.toEpochMilli,
+      completedAt = run.completedAt.map(_.toEpochMilli),
+      executedAt = run.executedAt.map(_.toEpochMilli)
     )
   }
 

@@ -341,6 +341,12 @@ angular-tree-component@^7.1.0:
     mobx "^3.6.2"
     mobx-angular "2.1.1"
 
+angular2-moment@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/angular2-moment/-/angular2-moment-1.8.0.tgz#27dd83d98de5d5e0f45412d82c89491a6fa245ca"
+  dependencies:
+    moment "^2.16.0"
+
 ansi-html@0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/ansi-html/-/ansi-html-0.0.7.tgz#813584021962a9e9e6fd039f940d12f56ca7859e"
@@ -4221,6 +4227,10 @@ module-deps@^4.0.8:
     subarg "^1.0.0"
     through2 "^2.0.0"
     xtend "^4.0.0"
+
+moment@^2.16.0:
+  version "2.22.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.1.tgz#529a2e9bf973f259c9643d237fda84de3a26e8ad"
 
 move-concurrently@^1.0.1:
   version "1.0.1"

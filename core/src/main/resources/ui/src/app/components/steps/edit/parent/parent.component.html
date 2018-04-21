@@ -55,8 +55,15 @@
             </div>
         </div>
 
-        <div class="col-sm3">
+        <div class="col">
             Available steps:
+
+            <input type="text"
+                   class="form-control"
+                   [(ngModel)]="searchText"
+                   (keyup)="filterAllSteps(searchText)"
+                   placeholder="Filter"
+            />
 
             <div class="panel-body" dnd-sortable-container [sortableData]="mutatingStepList" [dropZones]="['child-dropZone']">
                 <ul class="list-group">

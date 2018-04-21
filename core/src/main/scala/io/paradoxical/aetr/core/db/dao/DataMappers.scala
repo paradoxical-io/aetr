@@ -7,7 +7,9 @@ import io.paradoxical.rdb.slick.dao.SlickDAO
 import io.paradoxical.rdb.slick.providers.SlickDBProvider
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import scala.concurrent.duration.FiniteDuration
 import slick.ast.BaseTypedType
 import slick.jdbc._
 
@@ -22,6 +24,10 @@ class DataMappers @Inject()(
 
   implicit val versionMapper: JdbcType[Version] with BaseTypedType[Version] = {
     MappedColumnType.base[Version, Long](_.value, Version)
+  }
+
+  implicit val finiteDurationMapper: JdbcType[FiniteDuration] with BaseTypedType[FiniteDuration] = {
+    MappedColumnType.base[FiniteDuration, Long](_.toMillis, x => FiniteDuration(x, TimeUnit.MILLISECONDS))
   }
 
   implicit val stepTreeIdMapper: JdbcType[StepTreeId] with BaseTypedType[StepTreeId] = {
