@@ -25,6 +25,9 @@ import {EditStepActionComponent} from "./components/steps/edit/action/action.com
 import { MapperEditComponent } from './components/mapper-edit/mapper-edit.component';
 import { ReducerEditComponent } from './components/reducer-edit/reducer-edit.component';
 import { NashornComponent } from './components/reducer-edit/nashorn/nashorn.component';
+import { RunDetailsItemComponent } from './components/run-details/run-details-item/run-details-item.component';
+import {MomentModule} from "angular2-moment";
+import {Utils} from 'app/utils/state-utils';
 
 const appRoutes: Routes = [
     {path: 'steps/new', component: CreateStepComponent},
@@ -60,19 +63,21 @@ const appRoutes: Routes = [
         RunDetailsComponent,
         MapperEditComponent,
         ReducerEditComponent,
-        NashornComponent
+        NashornComponent,
+        RunDetailsItemComponent
     ],
     imports: [
         RouterModule.forRoot(appRoutes),
         DndModule.forRoot(),
         HttpClientModule,
         TreeModule,
+        MomentModule,
         FormsModule,
         ReactiveFormsModule,
         BrowserModule,
         OrderModule
     ],
-    providers: [ApiService],
+    providers: [ApiService, Utils],
     bootstrap: [AppComponent]
 })
 export class AppModule {

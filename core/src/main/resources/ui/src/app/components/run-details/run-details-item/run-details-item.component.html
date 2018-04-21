@@ -1,0 +1,32 @@
+<table class="table table-bordered" *ngIf="run">
+    <tbody>
+    <tr>
+        <th scope="row">Name</th>
+        <td>{{run.stepTree.name}}</td>
+    </tr>
+    <tr>
+        <th scope="row">State</th>
+        <td>{{run.state}}</td>
+    </tr>
+    <tr>
+        <th scope="row">Input</th>
+        <td>
+            <pre>{{run.input}}</pre>
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">Result</th>
+        <td>
+            <pre>{{run.result}}</pre>
+        </td>
+    </tr>
+    <tr *ngIf="run.state == RunState.Executing || utils.isComplete(run.state)">
+        <th scope="row">Time In Pending</th>
+        <td>{{timeInPending() | amDuration:'milliseconds'}}</td>
+    </tr>
+    <tr *ngIf="utils.isComplete(run.state)">
+        <th scope="row">Time Executing</th>
+        <td>{{timeInExecuting() | amDuration:'milliseconds'}}</td>
+    </tr>
+    </tbody>
+</table>

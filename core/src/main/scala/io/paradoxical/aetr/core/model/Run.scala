@@ -10,6 +10,8 @@ case class Run(
   var children: Seq[Run],
   rootId: RootId,
   repr: StepTree,
+  executedAt: Option[Instant] = None,
+  completedAt: Option[Instant] = None,
   version: Version = Version(1),
   createdAt: Instant = Instant.now(),
   updatedAt: Instant = Instant.now(),

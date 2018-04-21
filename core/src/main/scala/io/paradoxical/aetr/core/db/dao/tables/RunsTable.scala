@@ -23,6 +23,8 @@ case class RunDao(
   output: Option[ResultData],
   createdAt: Instant,
   lastUpdatedAt: Instant,
+  executedAt: Option[Instant],
+  completedAt: Option[Instant],
   actionLockedTill: Option[Instant] = None,
   lockId: Option[LockId] = None
 )
@@ -58,6 +60,10 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
 
     def lastUpdatedAt = column[Instant]("updated_at")
 
+    def executedAt = column[Option[Instant]]("executed_at")
+
+    def completedAt = column[Option[Instant]]("completed_at")
+
     def actionLockedTill = column[Option[Instant]]("action_locked_till")
 
     def lockId = column[Option[LockId]]("lock_id")
@@ -75,6 +81,8 @@ class Runs @Inject()()(val driver: JdbcProfile, dataMappers: DataMappers) extend
         output,
         createdAt,
         lastUpdatedAt,
+        executedAt,
+        completedAt,
         actionLockedTill,
         lockId
       ) <> (RunDao.tupled, RunDao.unapply)

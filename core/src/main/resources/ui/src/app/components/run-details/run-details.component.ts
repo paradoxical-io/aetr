@@ -4,6 +4,7 @@ import {ApiService} from "../../services/api.service";
 import {ActivatedRoute} from "@angular/router";
 import {RunState, RunTree} from "../../model/model";
 import {ITreeOptions} from "angular-tree-component";
+import {Utils} from "../../utils/state-utils";
 
 @Component({
     selector: 'app-run-details',
@@ -12,7 +13,7 @@ import {ITreeOptions} from "angular-tree-component";
 })
 export class RunDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
-    constructor(private route: ActivatedRoute, private api: ApiService) {
+    constructor(private route: ActivatedRoute, private api: ApiService, public utils: Utils) {
     }
 
     private updateInterval: number;
@@ -91,7 +92,7 @@ export class RunDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
                 forkJoin([run]).subscribe(results => {
                     parent.run = results[0];
 
-                    if (parent.isComplete(parent.run.state)) {
+                    if (parent.utils.isComplete(parent.run.state)) {
                         parent.unwatchTasks();
                     }
                 })
@@ -101,9 +102,5 @@ export class RunDetailsComponent implements OnInit, OnDestroy, AfterViewInit {
 
             update.call(this);
         })
-    }
-
-    isComplete(state: RunState): boolean {
-        return state == this.RunState.Error || state == this.RunState.Complete;
     }
 }
