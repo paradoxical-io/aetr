@@ -22,11 +22,11 @@
     </tr>
     <tr *ngIf="run.state == RunState.Executing || utils.isComplete(run.state)">
         <th scope="row">Time In Pending</th>
-        <td>{{timeInPending() | amDuration:'milliseconds'}}</td>
+        <td>{{timeInPending()}} ms ({{timeInPending() | amDuration:'milliseconds'}})</td>
     </tr>
     <tr *ngIf="utils.isComplete(run.state)">
         <th scope="row">Time Executing</th>
-        <td>{{timeInExecuting() | amDuration:'milliseconds'}}</td>
+        <td>{{timeInExecuting()}} ms ({{timeInExecuting() | amDuration:'milliseconds'}})</td>
     </tr>
     </tbody>
 </table>
