@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../../../services/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
-import {NashornMapper, Step, StepType} from "../../../../model/model";
+import {Step, StepType} from "../../../../model/model";
 import {forkJoin} from "rxjs/observable/forkJoin";
 
 @Component({
@@ -19,6 +19,8 @@ export class EditStepParentComponent implements OnInit {
     }
 
     step: Step;
+
+    searchText: string = "";
 
     StepType = StepType;
 
@@ -48,12 +50,24 @@ export class EditStepParentComponent implements OnInit {
         })
     }
 
+    filterAllSteps() {
+        this.applyFilter()
+    }
+
+    private applyFilter() {
+        this.mutatingStepList = this.allSteps.filter(x => x.name.toLowerCase().indexOf(this.searchText.toLowerCase()) != -1)
+    }
+
     private sortSteps() {
         this.allSteps.sort((a, b) => a.name.localeCompare(b.name))
     }
 
     resyncSteps() {
         this.mutatingStepList = this.allSteps.slice();
+
+        if (this.searchText.length > 0) {
+            this.applyFilter()
+        }
     }
 
     save() {
