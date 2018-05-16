@@ -2,6 +2,10 @@ Aetr
 ===
 
 [![Build Status](https://travis-ci.org/paradoxical-io/aetr.svg?branch=master)](https://travis-ci.org/paradoxical-io/aetr)
+[![](https://images.microbadger.com/badges/version/paradoxical/aetr.svg)](https://microbadger.com/images/paradoxical/aetr "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/paradoxical/aetr.svg)](https://microbadger.com/images/paradoxical/aetr "Get your own image badge on microbadger.com")
+[![Maven Central](https://img.shields.io/maven-central/v/io.paradoxical/aetr-core_2.12.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22aetr_core_2.12t%22)
+
 
 
 AETR is an *A*PI *E*xecution *T*ask *R*unner.  Basically its there to manage a workflow of calling API's in a particular step for you.
